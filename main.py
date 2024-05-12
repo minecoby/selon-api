@@ -5,7 +5,7 @@ import logging
 import uvicorn
 import hmac
 import hashlib
-import subprocess
+
 app = FastAPI() #fast api 어플리케이션 생성? 
 
 origins = [
@@ -22,18 +22,27 @@ app.add_middleware(
 #=========================================================================================================================================================
 
 
-WEBHOOK_SECRET = "74D55CAF58DFEF548645C15FA8EA4"
+SECRET_TOKEN = "74D55CAF58DFEF548645C15FA8EA4"
 
 @app.post("/webhook/")
 async def github_webhook(request: Request):
-    webhook_data = await request.json()
-    # 여기서 webhook_data를 사용하여 특정 이벤트(예: push 이벤트)에 대한 처리를 할 수 있습니다.
-    # 예를 들어, 특정 브랜치에 대한 push 이벤트만 처리하고 싶다면 여기서 필터링할 수 있습니다.
+    # GitHub에서 보낸 서명을 헤더에서 추출
+    signature = request.headers.get("X-Hub-Signature-256")
+    if signature is None:
+        raise HTTPException(status_code=400, detail="X-Hub-Signature-256 header missing")
 
-    # push 이벤트가 감지되면 로컬에서 git pull 실행
-    subprocess.run(["git", "pull"], cwd="C:/Users/admin/Documents/GitHub/selon-api")
-    return {"message": "Successfully pulled."}
+    # 요청 본문을 받아옴
+    body = await request.body()
 
+    # HMAC을 사용해 서명 검증
+    expected_signature = hmac.new(bytes(SECRET_TOKEN, 'utf-8'), body, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(f"sha256={expected_signature}", signature):
+        raise HTTPException(status_code=400, detail="Invalid signature")
+
+    # 서명이 유효하면 처리 로직 실행 (예: git pull 명령 실행)
+    # 처리 로직을 여기에 구현
+    
+    return {"message": "Webhook received successfully"}
 
 
 #=========================================================================================================================================================
@@ -50,7 +59,7 @@ items = {"1": {"name" : "pen"}, "2":{"name":"pencil"}}
 
 @app.get("/items")
 async def read_items(): 
-    logger.info("Fetching all items ddsad")
+    logger.info("Fetching all items ddddda")
     return items
 
 
