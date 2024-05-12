@@ -54,7 +54,7 @@ items = {"1": {"name" : "pen"}, "2":{"name":"pencil"}}
 
 @app.get("/items")
 async def read_items(): 
-    logger.info("Fetching all items last test")
+    logger.info("Fetching all items")
     return items
 
 
@@ -94,7 +94,7 @@ async def patch_item(item_id: str, name: str =Form(...)):
 
 #=========================================================================================================================================================
 
-
+#이젠 자동으로 되는거겠지.. 마지막..마지막테트스
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port = 8000, reload= True)
