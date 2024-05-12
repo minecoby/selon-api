@@ -35,7 +35,8 @@ async def github_webhook(request: Request):
         return {"error": "서명 검증 실패"}
 
     # git pull 실행
-    subprocess.run(['git', 'pull'], check=True)
+    subprocess.run(['C:\\Program Files\\Git\\bin\\git.exe', 'pull'], check=True)
+
 
     # 필요한 추가 작업 실행
     # 예: subprocess.run(['./restart_server.sh'], check=True)
