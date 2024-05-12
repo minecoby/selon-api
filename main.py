@@ -5,8 +5,6 @@ import logging
 import uvicorn
 import hmac
 import hashlib
-import hashlib
-import subprocess
 
 app = FastAPI() #fast api 어플리케이션 생성? 
 
@@ -41,13 +39,10 @@ async def github_webhook(request: Request):
     if not hmac.compare_digest(f"sha256={expected_signature}", signature):
         raise HTTPException(status_code=400, detail="Invalid signature")
 
-    # 서명이 유효하면 git pull 실행
-    try:
-        subprocess.run(["git", "pull"], check=True)
-        return {"message": "Successfully pulled from GitHub"}
-    except subprocess.CalledProcessError as e:
-        return {"error": "An error occurred while pulling from GitHub"}
-
+    # 서명이 유효하면 처리 로직 실행 (예: git pull 명령 실행)
+    # 처리 로직을 여기에 구현
+    
+    return {"message": "Webhook received successfully"}
 
 
 #=========================================================================================================================================================
