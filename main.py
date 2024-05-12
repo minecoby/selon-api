@@ -39,7 +39,13 @@ async def github_webhook(request: Request):
     if not hmac.compare_digest(expected_signature, signature_header):
         raise HTTPException(status_code=400, detail="Invalid signature")
     
-    return {"message": "Webhook received!"}
+    try:
+        repo_path = 'C:/Users/admin/Documents/GitHub/selon-api'
+        subprocess.check_output(['git', '-C', repo_path, 'pull'])
+    except subprocess.CalledProcessError as e:
+        return {"messae" : "pull 되지않음", "details": str(e)}
+    
+    return {"message": "정상적으로 pull 되었음"}
 
 
 
