@@ -64,7 +64,7 @@ items = {"1": {"name" : "pen"}, "2":{"name":"pencil"}}
 
 @app.get("/items")
 async def read_items(): 
-    logger.info("Fetching all items abcdefg")
+    logger.info("Fetching all items adddd")
     return items
 
 
