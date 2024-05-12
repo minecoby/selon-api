@@ -27,19 +27,14 @@ SECRET_TOKEN = b"74D55CAF58DFEF548645C15FA8EA4"
 
 @app.post("/webhook/")
 async def github_webhook(request: Request):
-    # GitHub에서 보낸 서명 검증
     signature = request.headers.get('X-Hub-Signature-256')
     body = await request.body()
     expected_signature = 'sha256=' + hmac.new(SECRET_TOKEN, body, hashlib.sha256).hexdigest()
     if not hmac.compare_digest(expected_signature, signature):
         return {"error": "서명 검증 실패"}
 
-    # git pull 실행
     subprocess.run(['C:\\Program Files\\Git\\bin\\git.exe', 'pull'], check=True)
 
-
-    # 필요한 추가 작업 실행
-    # 예: subprocess.run(['./restart_server.sh'], check=True)
 
     return {"message": "성공적으로 업데이트됨"}
 
