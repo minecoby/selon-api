@@ -31,7 +31,7 @@ async def github_webhook(request: Request):
     # 예를 들어, 특정 브랜치에 대한 push 이벤트만 처리하고 싶다면 여기서 필터링할 수 있습니다.
 
     # push 이벤트가 감지되면 로컬에서 git pull 실행
-    subprocess.run(["git", "pull"], cwd="/path/to/your/local/repo")
+    subprocess.run(["git", "pull"], cwd="C:/Users/admin/Documents/GitHub/selon-api")
     return {"message": "Successfully pulled."}
 
 
