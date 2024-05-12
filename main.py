@@ -5,8 +5,7 @@ import logging
 import uvicorn
 import hmac
 import hashlib
-import asyncio
-import aiofiles
+import subprocess
 app = FastAPI() #fast api 어플리케이션 생성? 
 
 origins = [
@@ -23,43 +22,31 @@ app.add_middleware(
 #=========================================================================================================================================================
 
 
-SECRET_KEY = "74D55CAF58DFEF548645C15FA8EA4"
+WEBHOOK_SECRET = "74D55CAF58DFEF548645C15FA8EA4"
 
 
-@app.post("/webhook")
-async def github_webhook(request: Request):
-    signature_header = request.headers.get('X-Hub-Signature-256')
-    if not signature_header:
-        raise HTTPException(status_code=400, detail="Signature header missing")
 
+def verify_signature(x_hub_signature, data):
+    """
+    GitHub에서 전송된 X-Hub-Signature 헤더와 요청 데이터를 사용하여 HMAC SHA1 서명을 검증합니다.
+    """
+    github_signature = hmac.new(bytes(WEBHOOK_SECRET, 'utf-8'), msg=data, digestmod=hashlib.sha1).hexdigest()
+    return hmac.compare_digest(f'sha1={github_signature}', x_hub_signature)
+
+@app.post("/webhook/")
+async def github_webhook(request: Request, x_hub_signature):
     body = await request.body()
 
-    hmac_gen = hmac.new(SECRET_KEY.encode(), body, hashlib.sha256)
-    expected_signature = "sha256=" + hmac_gen.hexdigest()
-
-    if not hmac.compare_digest(expected_signature, signature_header):
+    # 시그니처 검증
+    if x_hub_signature is None or not verify_signature(x_hub_signature, body):
         raise HTTPException(status_code=400, detail="Invalid signature")
 
-    try:
-        repo_path = 'C:/Users/admin/Documents/GitHub/selon-api'
-        await git_pull(repo_path)
-    except Exception as e:
-        return {"message": "pull 되지않음", "details": str(e)}
-    
-    return {"message": "정상적으로 pull 되었음"}
+    webhook_data = await request.json()
+    # 여기서 webhook_data를 사용하여 특정 이벤트(예: push 이벤트)에 대한 처리를 할 수 있습니다.
 
-async def git_pull(repo_path: str):
-    process = await asyncio.create_subprocess_exec(
-        'git',
-        '-C',
-        repo_path,
-        'pull',
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
-    )
-    stdout, stderr = await process.communicate()
-    if process.returncode != 0:
-        raise Exception(f"Git pull failed: {stderr.decode().strip()}")
+    # push 이벤트가 감지되면 로컬에서 git pull 실행
+    subprocess.run(["git", "pull"], cwd="/path/to/your/local/repo")
+    return {"message": "Successfully pulled."}
 
 #=========================================================================================================================================================
 @app.get("/") #데코레이터
