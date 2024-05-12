@@ -1,11 +1,9 @@
-from fastapi import FastAPI, Form, Request, HTTPException
+from fastapi import FastAPI, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import logging
 import uvicorn
-import subprocess
-import hmac
-import hashlib
+from github_pull import handle_github_webhook
 
 app = FastAPI() #fast api 어플리케이션 생성? 
 
@@ -23,20 +21,9 @@ app.add_middleware(
 #=========================================================================================================================================================
 
 
-SECRET_TOKEN = b"74D55CAF58DFEF548645C15FA8EA4"
-
 @app.post("/webhook/")
 async def github_webhook(request: Request):
-    signature = request.headers.get('X-Hub-Signature-256')
-    body = await request.body()
-    expected_signature = 'sha256=' + hmac.new(SECRET_TOKEN, body, hashlib.sha256).hexdigest()
-    if not hmac.compare_digest(expected_signature, signature):
-        return {"error": "서명 검증 실패"}
-
-    subprocess.run(['C:\\Program Files\\Git\\bin\\git.exe', 'pull'], check=True)
-
-
-    return {"message": "성공적으로 업데이트됨"}
+    return await handle_github_webhook(request)
 
 
 
