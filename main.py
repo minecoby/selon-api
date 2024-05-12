@@ -6,6 +6,8 @@ import uvicorn
 import hmac
 import hashlib
 import subprocess
+import asyncio
+import aiofiles
 
 app = FastAPI() #fast api 어플리케이션 생성? 
 
@@ -38,14 +40,27 @@ async def github_webhook(request: Request):
 
     if not hmac.compare_digest(expected_signature, signature_header):
         raise HTTPException(status_code=400, detail="Invalid signature")
-    
+
     try:
         repo_path = 'C:/Users/admin/Documents/GitHub/selon-api'
-        subprocess.check_output(['git', '-C', repo_path, 'pull'])
-    except subprocess.CalledProcessError as e:
-        return {"messae" : "pull 되지않음", "details": str(e)}
+        await git_pull(repo_path)
+    except Exception as e:
+        return {"message": "pull 되지않음", "details": str(e)}
     
     return {"message": "정상적으로 pull 되었음"}
+
+async def git_pull(repo_path: str):
+    process = await asyncio.create_subprocess_exec(
+        'git',
+        '-C',
+        repo_path,
+        'pull',
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    stdout, stderr = await process.communicate()
+    if process.returncode != 0:
+        raise Exception(f"Git pull failed: {stderr.decode().strip()}")
 
 
 
