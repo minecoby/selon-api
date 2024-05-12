@@ -23,7 +23,7 @@ app.add_middleware(
 #=========================================================================================================================================================
 
 
-SECRET_TOKEN = "74D55CAF58DFEF548645C15FA8EA4"
+SECRET_TOKEN = b"74D55CAF58DFEF548645C15FA8EA4"
 
 @app.post("/webhook/")
 async def github_webhook(request: Request):
