@@ -30,7 +30,7 @@ async def github_webhook(request: Request):
     # GitHub에서 보낸 서명 검증
     signature = request.headers.get('X-Hub-Signature-256')
     body = await request.body()
-    expected_signature = 'sha256=' + hmac.new(SECRET_TOKEN, body, hashlib.sha256).hexdigest()
+    expected_signature = 'sha256=' + hmac.new(SECRET_TOKEN.encode(), body, hashlib.sha256).hexdigest()
     if not hmac.compare_digest(expected_signature, signature):
         return {"error": "서명 검증 실패"}
 
