@@ -3,8 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import logging
 import uvicorn
-import hashlib
 import subprocess
+import hmac
+import hashlib
 
 app = FastAPI() #fast api 어플리케이션 생성? 
 
@@ -26,14 +27,20 @@ SECRET_TOKEN = "74D55CAF58DFEF548645C15FA8EA4"
 
 @app.post("/webhook/")
 async def github_webhook(request: Request):
-    webhook_data = await request.json()
-    # 여기서 webhook_data를 사용하여 특정 조건이 충족되었는지 확인하거나 로깅할 수 있습니다.
-    # 예: 특정 브랜치에 대한 push 이벤트인지 확인
+    # GitHub에서 보낸 서명 검증
+    signature = request.headers.get('X-Hub-Signature-256')
+    body = await request.body()
+    expected_signature = 'sha256=' + hmac.new(SECRET_TOKEN, body, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(expected_signature, signature):
+        return {"error": "서명 검증 실패"}
 
-    # 여기서는 예제를 단순화하기 위해 모든 push에서 코드를 pull하도록 설정합니다.
-    # 보안상의 이유로, 실제 환경에서는 요청이 실제 GitHub으로부터 왔는지 등을 검증해야 합니다.
+    # git pull 실행
+    subprocess.run(['git', 'pull'], check=True)
 
-    return {"message": "Successfully pulled."}
+    # 필요한 추가 작업 실행
+    # 예: subprocess.run(['./restart_server.sh'], check=True)
+
+    return {"message": "성공적으로 업데이트됨"}
 
 
 
