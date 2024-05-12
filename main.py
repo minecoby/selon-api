@@ -5,9 +5,8 @@ import logging
 import uvicorn
 import hmac
 import hashlib
+import hashlib
 import subprocess
-import asyncio
-import aiofiles
 
 app = FastAPI() #fast api 어플리케이션 생성? 
 
@@ -25,42 +24,29 @@ app.add_middleware(
 #=========================================================================================================================================================
 
 
-SECRET_KEY = "74D55CAF58DFEF548645C15FA8EA4"
+SECRET_TOKEN = "74D55CAF58DFEF548645C15FA8EA4"
 
-@app.post("/webhook")
+@app.post("/webhook/")
 async def github_webhook(request: Request):
-    signature_header = request.headers.get('X-Hub-Signature-256')
-    if not signature_header:
-        raise HTTPException(status_code=400, detail="Signature header missing")
+    # GitHub에서 보낸 서명을 헤더에서 추출
+    signature = request.headers.get("X-Hub-Signature-256")
+    if signature is None:
+        raise HTTPException(status_code=400, detail="X-Hub-Signature-256 header missing")
 
+    # 요청 본문을 받아옴
     body = await request.body()
 
-    hmac_gen = hmac.new(SECRET_KEY.encode(), body, hashlib.sha256)
-    expected_signature = "sha256=" + hmac_gen.hexdigest()
-
-    if not hmac.compare_digest(expected_signature, signature_header):
+    # HMAC을 사용해 서명 검증
+    expected_signature = hmac.new(bytes(SECRET_TOKEN, 'utf-8'), body, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(f"sha256={expected_signature}", signature):
         raise HTTPException(status_code=400, detail="Invalid signature")
 
+    # 서명이 유효하면 git pull 실행
     try:
-        repo_path = 'C:/Users/admin/Documents/GitHub/selon-api'
-        await git_pull(repo_path)
-    except Exception as e:
-        return {"message": "pull 되지않음", "details": str(e)}
-    
-    return {"message": "정상적으로 pull 되었음"}
-
-async def git_pull(repo_path: str):
-    process = await asyncio.create_subprocess_exec(
-        'git',
-        '-C',
-        repo_path,
-        'pull',
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
-    )
-    stdout, stderr = await process.communicate()
-    if process.returncode != 0:
-        raise Exception(f"Git pull failed: {stderr.decode().strip()}")
+        subprocess.run(["git", "pull"], check=True)
+        return {"message": "Successfully pulled from GitHub"}
+    except subprocess.CalledProcessError as e:
+        return {"error": "An error occurred while pulling from GitHub"}
 
 
 
