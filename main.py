@@ -32,7 +32,7 @@ async def github_webhook(request: Request):
 
     # 여기서는 예제를 단순화하기 위해 모든 push에서 코드를 pull하도록 설정합니다.
     # 보안상의 이유로, 실제 환경에서는 요청이 실제 GitHub으로부터 왔는지 등을 검증해야 합니다.
-    subprocess.run(["git", "pull"], check=True)
+
     return {"message": "Successfully pulled."}
 
 
