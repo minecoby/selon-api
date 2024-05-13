@@ -26,7 +26,6 @@ async def github_webhook(request: Request):
     return await handle_github_webhook(request)
 
 
-
 #=========================================================================================================================================================
 @app.get("/") #데코레이터
 async def root():
