@@ -4,7 +4,7 @@ from pydantic import BaseModel
 import logging
 import uvicorn
 from github_pull import handle_github_webhook
-
+import sqlalchemy
 app = FastAPI() #fast api 어플리케이션 생성? 
 
 origins = [
@@ -20,7 +20,7 @@ app.add_middleware(
 )
 #=========================================================================================================================================================
 
-
+#github 자동 pull 함수 코드작성하실때 주석처리하시고 하세요
 @app.post("/webhook/")
 async def github_webhook(request: Request):
     return await handle_github_webhook(request)
