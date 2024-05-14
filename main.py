@@ -8,7 +8,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from github_pull import handle_github_webhook
 
-
 app = FastAPI() # FastAPI 애플리케이션 생성
 
 origins = ["*"]
@@ -22,8 +21,8 @@ app.add_middleware(
 )
 
 #=========================================================================================================================================================
-SQLALCHEMY_DATABASE_URL_USER = "mysql+mysqlconnector://user:iRqLKIqRI4IHvKx@127.0.0.1:3306/user_data"
-SQLALCHEMY_DATABASE_URL_NOTICE = "mysql+mysqlconnector://user:iRqLKIqRI4IHvKx@127.0.0.1:3306/notice_data"
+SQLALCHEMY_DATABASE_URL_USER = "mysql+mysqlconnector://root:iRqLKIqRI4IHvKx@127.0.0.1:3306/user_database"
+SQLALCHEMY_DATABASE_URL_NOTICE = "mysql+mysqlconnector://root:iRqLKIqRI4IHvKx@127.0.0.1:3306/notice_database"
 user_engine = create_engine(SQLALCHEMY_DATABASE_URL_USER)
 notice_engine = create_engine(SQLALCHEMY_DATABASE_URL_NOTICE)
 user_SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=user_engine)
@@ -36,16 +35,20 @@ notice_Base = declarative_base()
 class User(user_Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    nickname = Column(String, unique=True, index=True)
+    nickname = Column(String(255), unique=True, index=True)
     grade = Column(Integer)
 
 user_Base.metadata.create_all(bind=user_engine)
 
-def get_db(name):
-    if name == 'user':
-        db = user_SessionLocal()
-    if name == 'notice':
-        db = notice_SessionLocal()
+def get_userdb():
+    db = user_SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def get_noticedb():
+    db = notice_SessionLocal()
     try:
         yield db
     finally:
@@ -65,10 +68,10 @@ class UserResponse(BaseModel):
     grade: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 @app.post("/users/", response_model=UserResponse, tags=["user"])
-def create_user(user: UserCreate, db: Session = Depends(lambda : get_db('user'))):
+def create_user(user: UserCreate, db: Session = Depends(get_userdb)):
     db_user = User(nickname=user.nickname, grade=user.grade)
     db.add(db_user)
     db.commit()
@@ -76,14 +79,14 @@ def create_user(user: UserCreate, db: Session = Depends(lambda : get_db('user'))
     return db_user
 
 @app.get("/users/{user_id}", response_model=UserResponse, tags=["user"])
-def read_user(user_id: int, db: Session = Depends(lambda : get_db('user'))):
+def read_user(user_id: int, db: Session = Depends(get_userdb)):
     db_user = db.query(User).filter(User.id == user_id).first()
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
 
 @app.patch("/users/{user_id}", response_model=UserResponse, tags=["user"])
-def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(lambda : get_db('user'))):
+def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get_userdb)):
     db_user = db.query(User).filter(User.id == user_id).first()
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -100,8 +103,8 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(lam
 class Notice(notice_Base):
     __tablename__ = "notification"
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, unique=True, index=True)
-    content = Column(String)
+    title = Column(String(255), unique=True, index=True)
+    content = Column(String(1000))
 
 notice_Base.metadata.create_all(bind=notice_engine)
 
@@ -119,10 +122,10 @@ class NoticeResponse(BaseModel):
     content: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 @app.post("/notice/", response_model=NoticeResponse, tags=["notice"])
-def create_notice(notice: NoticeCreate, db: Session = Depends(lambda : get_db('notice'))):
+def create_notice(notice: NoticeCreate, db: Session = Depends(get_noticedb)):
     db_content = Notice(title=notice.title, content=notice.content)
     db.add(db_content)
     db.commit()
@@ -130,14 +133,14 @@ def create_notice(notice: NoticeCreate, db: Session = Depends(lambda : get_db('n
     return db_content
 
 @app.get("/notice/{notice_id}", response_model=NoticeResponse, tags=["notice"])
-def read_notice(notice_id: int, db: Session = Depends(lambda : get_db('notice'))):
+def read_notice(notice_id: int, db: Session = Depends(get_noticedb)):
     db_notice = db.query(Notice).filter(Notice.id == notice_id).first()
     if db_notice is None:
         raise HTTPException(status_code=404, detail="Notice not found")
     return db_notice
 
 @app.patch("/notice/{notice_id}", response_model=NoticeResponse, tags=["notice"])
-def update_notice(notice_id: int, notice_update: NoticeUpdate, db: Session = Depends(lambda : get_db('notice'))):
+def update_notice(notice_id: int, notice_update: NoticeUpdate, db: Session = Depends(get_noticedb)):
     db_notice = db.query(Notice).filter(Notice.id == notice_id).first()
     if db_notice is None:
         raise HTTPException(status_code=404, detail="Notice not found")
@@ -205,4 +208,4 @@ async def patch_item(item_id: str, name: str = Form(...)):
         return {"message": "Item not found"}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
