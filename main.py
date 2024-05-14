@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Form, Request, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import logging
 import uvicorn
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
@@ -32,7 +31,7 @@ notice_SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=notic
 user_Base = declarative_base()
 notice_Base = declarative_base()
 
-
+#
 class User(user_Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -101,6 +100,7 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get
     db.refresh(db_user)
     return db_user
 #=====================================================================================================================
+#
 class Notice(notice_Base):
     __tablename__ = "notification"
     id = Column(Integer, primary_key=True, index=True)
@@ -169,48 +169,6 @@ async def github_webhook(request: Request):
 @app.get("/") # 데코레이터
 async def root():
     return {"message": "반가워요 여러분"}
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-items = {"1": {"name": "pen"}, "2": {"name": "pencil"}}
-
-@app.get("/items")
-async def read_items(): 
-    logger.info("Fetching all items")
-    return items
-
-@app.post("/items/{item_id}") 
-async def create_item(item_id: str, name: str = Form(...)):
-    items[item_id] = {"name": name}
-    logger.info(f"item created: {item_id} - {name}")
-    return items[item_id]
-
-@app.put("/items/{item_id}")
-async def update_item(item_id: str, name: str = Form(...)):
-    items[item_id] = {"name": name}
-    logger.info(f"item updated: {item_id} - {name}")
-    return items[item_id]
-
-@app.delete("/items/{item_id}")
-async def delete_item(item_id: str):
-    if item_id in items:
-        del items[item_id]
-        logger.info(f"item deleted: {item_id}")
-        return {"message": "Item deleted"}
-    else:
-        logger.info(f"item not found: {item_id}")
-        return {"message": "Item not found"}
-
-@app.patch("/items/{item_id}")
-async def patch_item(item_id: str, name: str = Form(...)):
-    if item_id in items:
-        items[item_id]["name"] = name
-        logger.info(f"Item patched: {item_id} - {name}")
-        return items[item_id]
-    else:
-        logger.info(f"Item not found {item_id}")
-        return {"message": "Item not found"}
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
