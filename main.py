@@ -4,7 +4,6 @@ from pydantic import BaseModel
 import logging
 import uvicorn
 from github_pull import handle_github_webhook
-import sqlalchemy
 app = FastAPI() #fast api 어플리케이션 생성? 
 
 origins = [
