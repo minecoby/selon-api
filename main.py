@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from github_pull import handle_github_webhook
-from typing import List
+from typing import List, Dict
 
 app = FastAPI() # FastAPI 애플리케이션 생성
 
@@ -107,8 +107,6 @@ class Notice(notice_Base):
     title = Column(String(255), unique=True, index=True)
     content = Column(String(1000))
 
-class NoticeTitleResponse(BaseModel):
-    title: str
 
 notice_Base.metadata.create_all(bind=notice_engine)
 
@@ -123,10 +121,15 @@ class NoticeUpdate(BaseModel):
 class NoticeResponse(BaseModel):
     id: int
     title: str
-    content: str
 
     class Config:
         from_attributes = True
+        
+class NoticeInfo(BaseModel):
+    id : int
+    title: str
+    content: str
+
 
 @app.post("/notice/", response_model=NoticeResponse, tags=["notice"])
 def create_notice(notice: NoticeCreate, db: Session = Depends(get_noticedb)):
@@ -136,13 +139,12 @@ def create_notice(notice: NoticeCreate, db: Session = Depends(get_noticedb)):
     db.refresh(db_content)
     return db_content
 
-@app.get("/notice/{notice_id}", response_model=List[NoticeTitleResponse], tags=["notice"])
+@app.get("/notice/{notice_id}", response_model=List[NoticeResponse], tags=["notice"])
 def read_notice(db: Session = Depends(get_noticedb)):
-    db_notice = db.query(Notice.title).all()
-    titles = [NoticeTitleResponse(title = title[0]) for title in db_notice]
-    if titles is None:
+    db_notice = db.query(Notice).all()
+    if db_notice is None:
         raise HTTPException(status_code=404, detail="Notice not found")
-    return titles
+    return db_notice
 
 @app.patch("/notice/{notice_id}", response_model=NoticeResponse, tags=["notice"])
 def update_notice(notice_id: int, notice_update: NoticeUpdate, db: Session = Depends(get_noticedb)):
@@ -158,6 +160,16 @@ def update_notice(notice_id: int, notice_update: NoticeUpdate, db: Session = Dep
     db.commit()
     db.refresh(db_notice)
     return db_notice
+
+@app.delete("/notice/{notice_id}", tags=['notice'])
+def delete_notice(notice_id: int, db: Session = Depends(get_noticedb)):
+    db_notice = db.query(Notice).filter(Notice.id == notice_id).first()
+    if db_notice is None:
+        raise HTTPException(status_code=404, detail="Notice not found")
+    db.delete(db_notice)
+    db.commit()
+    
+    
 
 #===================================================================================================
 
