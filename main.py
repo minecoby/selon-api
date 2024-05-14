@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Form, Request, Depends, HTTPException
+from fastapi import FastAPI,Request, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from github_pull import handle_github_webhook
-from typing import List, Dict
+from typing import List
 
 app = FastAPI() # FastAPI 애플리케이션 생성
 
@@ -31,7 +31,7 @@ notice_SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=notic
 user_Base = declarative_base()
 notice_Base = declarative_base()
 
-#
+#유저기능
 class User(user_Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -100,7 +100,7 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get
     db.refresh(db_user)
     return db_user
 #=====================================================================================================================
-#
+#공지사항
 class Notice(notice_Base):
     __tablename__ = "notification"
     id = Column(Integer, primary_key=True, index=True)
