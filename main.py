@@ -8,6 +8,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from github_pull import handle_github_webhook
 
+
 app = FastAPI() # FastAPI 애플리케이션 생성
 
 origins = ["*"]
@@ -21,22 +22,30 @@ app.add_middleware(
 )
 
 #=========================================================================================================================================================
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://<username>:<password>@<host>/<database_name>"
+SQLALCHEMY_DATABASE_URL_USER = "mysql+mysqlconnector://user:iRqLKIqRI4IHvKx@127.0.0.1:3306/user_data"
+SQLALCHEMY_DATABASE_URL_NOTICE = "mysql+mysqlconnector://user:iRqLKIqRI4IHvKx@127.0.0.1:3306/notice_data"
+user_engine = create_engine(SQLALCHEMY_DATABASE_URL_USER)
+notice_engine = create_engine(SQLALCHEMY_DATABASE_URL_NOTICE)
+user_SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=user_engine)
+notice_SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=notice_engine)
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+user_Base = declarative_base()
+notice_Base = declarative_base()
 
-class User(Base):
+
+class User(user_Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     nickname = Column(String, unique=True, index=True)
     grade = Column(Integer)
 
-Base.metadata.create_all(bind=engine)
+user_Base.metadata.create_all(bind=user_engine)
 
-def get_db():
-    db = SessionLocal()
+def get_db(name):
+    if name == 'user':
+        db = user_SessionLocal()
+    if name == 'notice':
+        db = notice_SessionLocal()
     try:
         yield db
     finally:
@@ -58,23 +67,23 @@ class UserResponse(BaseModel):
     class Config:
         orm_mode = True
 
-@app.post("/users/", response_model=UserResponse)
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
+@app.post("/users/", response_model=UserResponse, tags=["user"])
+def create_user(user: UserCreate, db: Session = Depends(lambda : get_db('user'))):
     db_user = User(nickname=user.nickname, grade=user.grade)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
 
-@app.get("/users/{user_id}", response_model=UserResponse)
-def read_user(user_id: int, db: Session = Depends(get_db)):
+@app.get("/users/{user_id}", response_model=UserResponse, tags=["user"])
+def read_user(user_id: int, db: Session = Depends(lambda : get_db('user'))):
     db_user = db.query(User).filter(User.id == user_id).first()
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
 
-@app.patch("/users/{user_id}", response_model=UserResponse)
-def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get_db)):
+@app.patch("/users/{user_id}", response_model=UserResponse, tags=["user"])
+def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(lambda : get_db('user'))):
     db_user = db.query(User).filter(User.id == user_id).first()
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -87,6 +96,61 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get
     db.commit()
     db.refresh(db_user)
     return db_user
+#=====================================================================================================================
+class Notice(notice_Base):
+    __tablename__ = "notification"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, unique=True, index=True)
+    content = Column(String)
+
+notice_Base.metadata.create_all(bind=notice_engine)
+
+class NoticeCreate(BaseModel):
+    title: str
+    content: str
+
+class NoticeUpdate(BaseModel):
+    title: str
+    content: str
+
+class NoticeResponse(BaseModel):
+    id: int
+    title: str
+    content: str
+
+    class Config:
+        orm_mode = True
+
+@app.post("/notice/", response_model=NoticeResponse, tags=["notice"])
+def create_user(notice: NoticeCreate, db: Session = Depends(lambda : get_db('notice'))):
+    db_content = Notice(title=notice.title, content=notice.content)
+    db.add(db_content)
+    db.commit()
+    db.refresh(db_content)
+    return db_content
+
+@app.get("/notice/{notice_id}", response_model=NoticeResponse, tags=["notice"])
+def read_user(notice_id: int, db: Session = Depends(lambda : get_db('notice'))):
+    db_notice = db.query(Notice).filter(Notice.id == notice_id).first()
+    if db_notice is None:
+        raise HTTPException(status_code=404, detail="Notice not found")
+    return db_notice
+
+@app.patch("/notice/{notice_id}", response_model=NoticeResponse, tags=["notice"])
+def update_user(notice_id: int, notice_update: NoticeUpdate, db: Session = Depends(lambda : get_db('notice'))):
+    db_notice = db.query(Notice).filter(Notice.id == notice_id).first()
+    if db_notice is None:
+        raise HTTPException(status_code=404, detail="Notice not found")
+    
+    if notice_update.title is not None:
+        db_notice.title = notice_update.title
+    if notice_update.content is not None:
+        db_notice.content = notice_update.content
+
+    db.commit()
+    db.refresh(db_notice)
+    return db_notice
+#===================================================================================================
 
 # GitHub 자동 pull 함수 코드작성하실때 주석처리하시고 하세요
 @app.post("/webhook/")
