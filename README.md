@@ -37,3 +37,23 @@
 <br />
 </td>
 </table>
+
+## 프로젝트 소개
+
+## 📦 기술 스택
+
+#### Enviroment
+
+ <img src="https://img.shields.io/badge/github-181717?style=for-the-badge&logo=github&logoColor=white"> 
+
+#### Development
+
+<img src="https://img.shields.io/badge/python-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
+<img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=MySQL&logoColor=white"/>
+---
+
+## 🖥️ 화면 구성
+
+## 📂 아키텍쳐
+
+### 디렉토리 구조
