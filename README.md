@@ -16,7 +16,8 @@
 > 개발기간 : 2024. 05. ~
 
 ## 🛠️참여자
-  
+
+<table>  
 <td align="center">
 <a href="https://github.com/minecoby">
 <img src="https://avatars.githubusercontent.com/u/127065808?v=4" width="80" alt=""/>
@@ -26,9 +27,6 @@
 <br />
 </td>
 
-
-
-<table>
 <tr>
 <td align="center">
 <a href="https://github.com/2-z-won">
@@ -38,3 +36,4 @@
 </a>
 <br />
 </td>
+</table>
