@@ -122,7 +122,7 @@ class NoticeResponse(BaseModel):
         orm_mode = True
 
 @app.post("/notice/", response_model=NoticeResponse, tags=["notice"])
-def create_user(notice: NoticeCreate, db: Session = Depends(lambda : get_db('notice'))):
+def create_notice(notice: NoticeCreate, db: Session = Depends(lambda : get_db('notice'))):
     db_content = Notice(title=notice.title, content=notice.content)
     db.add(db_content)
     db.commit()
@@ -130,14 +130,14 @@ def create_user(notice: NoticeCreate, db: Session = Depends(lambda : get_db('not
     return db_content
 
 @app.get("/notice/{notice_id}", response_model=NoticeResponse, tags=["notice"])
-def read_user(notice_id: int, db: Session = Depends(lambda : get_db('notice'))):
+def read_notice(notice_id: int, db: Session = Depends(lambda : get_db('notice'))):
     db_notice = db.query(Notice).filter(Notice.id == notice_id).first()
     if db_notice is None:
         raise HTTPException(status_code=404, detail="Notice not found")
     return db_notice
 
 @app.patch("/notice/{notice_id}", response_model=NoticeResponse, tags=["notice"])
-def update_user(notice_id: int, notice_update: NoticeUpdate, db: Session = Depends(lambda : get_db('notice'))):
+def update_notice(notice_id: int, notice_update: NoticeUpdate, db: Session = Depends(lambda : get_db('notice'))):
     db_notice = db.query(Notice).filter(Notice.id == notice_id).first()
     if db_notice is None:
         raise HTTPException(status_code=404, detail="Notice not found")
@@ -150,6 +150,7 @@ def update_user(notice_id: int, notice_update: NoticeUpdate, db: Session = Depen
     db.commit()
     db.refresh(db_notice)
     return db_notice
+
 #===================================================================================================
 
 # GitHub 자동 pull 함수 코드작성하실때 주석처리하시고 하세요
