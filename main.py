@@ -1,8 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from users import router as users_router
 from notices import router as notices_router
-
+from github_pull import handle_github_webhook
 app = FastAPI()
 
 origins = ["*"]
@@ -17,6 +17,11 @@ app.add_middleware(
 
 app.include_router(users_router)
 app.include_router(notices_router)
+
+
+@app.post("/webhook/")
+async def github_webhook(request: Request):
+    return await handle_github_webhook(request)
 
 @app.get("/")
 async def root():
