@@ -44,9 +44,16 @@ def create_notice(notice: NoticeCreate, db: Session = Depends(get_noticedb)):
     db.refresh(db_content)
     return db_content
 
-@router.get("/notice/{notice_id}", response_model=List[NoticeResponse], tags=["notice"])
+@router.get("/notice/", response_model=List[NoticeResponse], tags=["notice"])
 def read_notice(db: Session = Depends(get_noticedb)):
     db_notice = db.query(Notice).all()
+    if db_notice is None:
+        raise HTTPException(status_code=404, detail="Notice not found")
+    return db_notice
+
+@router.get("/users/{user_id}", response_model=NoticeInfo, tags=["notice"])
+def read_user(notice_id: int, db: Session = Depends(get_noticedb)):
+    db_notice = db.query(Notice).filter(Notice.id == notice_id).first()
     if db_notice is None:
         raise HTTPException(status_code=404, detail="Notice not found")
     return db_notice
