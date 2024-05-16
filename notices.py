@@ -51,8 +51,8 @@ def read_notice(db: Session = Depends(get_noticedb)):
         raise HTTPException(status_code=404, detail="Notice not found")
     return db_notice
 
-@router.get("/users/{user_id}", response_model=NoticeInfo, tags=["notice"])
-def read_user(notice_id: int, db: Session = Depends(get_noticedb)):
+@router.get("/notice/{notice_id}", response_model=NoticeInfo, tags=["notice"])
+def read_notice_info(notice_id: int, db: Session = Depends(get_noticedb)):
     db_notice = db.query(Notice).filter(Notice.id == notice_id).first()
     if db_notice is None:
         raise HTTPException(status_code=404, detail="Notice not found")
