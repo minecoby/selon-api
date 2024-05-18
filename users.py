@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
 from typing import List
 
@@ -35,9 +36,13 @@ router = APIRouter()
 @router.post("/users/", response_model=UserResponse, tags=["user"])
 def create_user(user: UserCreate, db: Session = Depends(get_userdb)):
     db_user = User(nickname=user.nickname, grade=user.grade)
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    try:
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="이미 존재하는 닉네임입니다.")
     return db_user
 
 @router.get("/users/{user_id}", response_model=UserResponse, tags=["user"])
