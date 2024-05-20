@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from users import router as users_router
 from notices import router as notices_router
 from github_pull import handle_github_webhook
+from database import user_Base, user_engine
 
 app = FastAPI()
 
@@ -29,4 +30,9 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
+
+#나중에 삭제하기
+    print("asdfasdf")
+    user_Base.metadata.create_all(bind=user_engine)
+    
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

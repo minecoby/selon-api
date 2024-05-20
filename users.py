@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
 from passlib.context import CryptContext
-from typing import List
+from typing import Optional
 
 from database import user_Base, get_userdb, user_engine
 
@@ -23,14 +23,14 @@ class UserCreate(BaseModel):
     password: str
 
 class UserUpdate(BaseModel):
-    nickname: str = None
-    grade: int = None
+    nickname: Optional[str] = None
+    grade: Optional[int] = None
 
 class UserResponse(BaseModel):
     id: int
     username: str
-    nickname: str = None
-    grade: int = None
+    nickname: Optional[str] = None
+    grade: Optional[int] = None
 
     class Config:
         orm_mode = True
@@ -73,7 +73,7 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get
     db_user = db.query(User).filter(User.id == user_id).first()
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     if user_update.nickname is not None:
         db_user.nickname = user_update.nickname
     if user_update.grade is not None:
