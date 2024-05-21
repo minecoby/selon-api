@@ -38,6 +38,8 @@ selon-api는 사용자 관리 및 공지사항 관리 기능을 제공하는 API
 
 ## 📦 기술 스택
 
+## 📦 기술 스택
+
 #### Environment
 <p>
   <img src="https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white"> 
@@ -59,9 +61,10 @@ selon-api는 사용자 관리 및 공지사항 관리 기능을 제공하는 API
 #### Frontend Development
 <p>
   <img src="https://img.shields.io/badge/React_Native-61DAFB?style=for-the-badge&logo=react&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white"/>
   <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=jest&logoColor=white"/>
+  <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=white"/>
+  <img src="https://img.shields.io/badge/React_Navigation-000000?style=for-the-badge&logo=react&logoColor=white"/>
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black"/>
 </p>
 
 ## 📂 아키텍쳐
