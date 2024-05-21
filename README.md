@@ -91,7 +91,6 @@ selon-api/
         ├── ios/
         ├── jest.config.js
         ├── metro.config.js
-        ├── node_modules/
         ├── package-lock.json
         ├── package.json
         ├── src/
