@@ -38,8 +38,6 @@ selon-api는 사용자 관리 및 공지사항 관리 기능을 제공하는 API
 
 ## 📦 기술 스택
 
-## 📦 기술 스택
-
 #### Environment
 <p>
   <img src="https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white"> 
