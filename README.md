@@ -52,6 +52,7 @@ selon-api는 사용자 관리 및 공지사항 관리 기능을 제공하는 API
 <img src="https://img.shields.io/badge/sqlalchemy-CA4245?style=for-the-badge&logo=sqlalchemy&logoColor=white"/>
 <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=MySQL&logoColor=white"/>
 <img src="https://img.shields.io/badge/passlib-009688?style=for-the-badge&logo=passlib&logoColor=white"/>
+
 #### Frontend
 <img src="https://img.shields.io/badge/react_native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB"/>
 <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB"/>
