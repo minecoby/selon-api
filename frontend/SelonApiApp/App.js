@@ -15,7 +15,7 @@ const App = () => {
   useEffect(() => {
     setTimeout(() => {
       setLoading(false);
-    }, 3000);
+    }, 8000);
   }, []);
 
   if (loading) {
@@ -45,8 +45,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#292929',
   },
   logo: {
-    width: 200,
-    height: 200,
+    width: 300, // 더 크게 설정
+    height: 300, // 더 크게 설정
     resizeMode: 'contain',
   },
 });
