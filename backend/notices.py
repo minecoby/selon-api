@@ -3,13 +3,14 @@ from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List
-
+import datetime
 from database import notice_Base, get_noticedb, notice_engine
 
 class Notice(notice_Base):
     __tablename__ = "notification"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), unique=True, index=True)
+    time = Column(String(255),index=True)
     content = Column(String(1000))
 
 notice_Base.metadata.create_all(bind=notice_engine)
@@ -25,6 +26,7 @@ class NoticeUpdate(BaseModel):
 class NoticeResponse(BaseModel):
     id: int
     title: str
+    time: str
 
     class Config:
         from_attributes = True
@@ -33,12 +35,13 @@ class NoticeInfo(BaseModel):
     id : int
     title: str
     content: str
+    time: str
 
 router = APIRouter()
 
 @router.post("/notice/", response_model=NoticeResponse, tags=["notice"])
 def create_notice(notice: NoticeCreate, db: Session = Depends(get_noticedb)):
-    db_content = Notice(title=notice.title, content=notice.content)
+    db_content = Notice(title=notice.title,time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') ,content=notice.content)
     db.add(db_content)
     db.commit()
     db.refresh(db_content)
