@@ -33,7 +33,7 @@ class UserResponse(BaseModel):
     grade: Optional[int] = None
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
