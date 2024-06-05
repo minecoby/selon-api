@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List
 import datetime
+
 from database import notice_Base, get_noticedb, notice_engine
 
 class Notice(notice_Base):
@@ -42,6 +43,7 @@ router = APIRouter()
 @router.post("/notice/", response_model=NoticeResponse, tags=["notice"])
 def create_notice(notice: NoticeCreate, db: Session = Depends(get_noticedb)):
     db_content = Notice(title=notice.title,created_at = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') ,content=notice.content)
+    db_content = Notice(title=notice.title, content=notice.content)
     db.add(db_content)
     db.commit()
     db.refresh(db_content)
