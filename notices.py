@@ -29,7 +29,6 @@ class NoticeUpdate(BaseModel):
 class NoticeResponse(BaseModel):
     id: int
     title: str
-    content: str
     created_at: datetime
 
 
