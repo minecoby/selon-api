@@ -12,7 +12,8 @@ class Notice(notice_Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), unique=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-    content = Column(String(1000))
+    content = Column(String(1000), index= True)
+    category = Column(String(255))
 
 
 notice_Base.metadata.create_all(bind=notice_engine)
@@ -20,6 +21,7 @@ notice_Base.metadata.create_all(bind=notice_engine)
 class NoticeCreate(BaseModel):
     title: str
     content: str
+    category: str
 
 
 class NoticeUpdate(BaseModel):
@@ -30,6 +32,7 @@ class NoticeResponse(BaseModel):
     id: int
     title: str
     created_at: datetime
+    category: str
 
 
     class Config:
@@ -39,6 +42,7 @@ class NoticeInfo(BaseModel):
     id : int
     title: str
     content: str
+    category: str
     created_at: datetime
 
 
@@ -46,7 +50,7 @@ router = APIRouter()
 
 @router.post("/notice/", response_model=NoticeResponse, tags=["notice"])
 def create_notice(notice: NoticeCreate, db: Session = Depends(get_noticedb)):
-    db_content = Notice(title=notice.title,content=notice.content)
+    db_content = Notice(title=notice.title,content=notice.content,category=notice.category)
     db.add(db_content)
     db.commit()
     db.refresh(db_content)
@@ -55,8 +59,8 @@ def create_notice(notice: NoticeCreate, db: Session = Depends(get_noticedb)):
 
 
 @router.get("/notice", response_model=List[NoticeResponse], tags=["notice"])
-def read_notice(db: Session = Depends(get_noticedb)):
-    db_notice = db.query(Notice).all()
+def read_notice(category: str, db: Session = Depends(get_noticedb)):
+    db_notice = db.query(Notice).filter(Notice.category == category).all()
     if db_notice is None:
         raise HTTPException(status_code=404, detail="Notice not found")
     return db_notice
