@@ -3,7 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 SQLALCHEMY_DATABASE_URL_USER = "mysql+mysqlconnector://root:iRqLKIqRI4IHvKx@localhost:3306/user_database"
-SQLALCHEMY_DATABASE_URL_NOTICE = "mysql+mysqlconnector://root:iRqLKIqRI4IHvKx@localhost:3306/notice_database"
+SQLALCHEMY_DATABASE_URL_NOTICE = "mysql+mysqlconnector://root:iRqLKIqRI4IHvKx@localhost:3306/notice_database?charset=utf8mb4"
 
 user_engine = create_engine(SQLALCHEMY_DATABASE_URL_USER)
 notice_engine = create_engine(SQLALCHEMY_DATABASE_URL_NOTICE)

@@ -10,9 +10,9 @@ from database import notice_Base, get_noticedb, notice_engine
 class Notice(notice_Base):
     __tablename__ = "notification"
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(255), unique=True, index=True)
+    title = Column(String(255), unique=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-    content = Column(String(1000), index= True)
+    content = Column(String(1000))
     category = Column(String(255))
 
 
