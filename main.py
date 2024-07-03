@@ -8,6 +8,7 @@ from database import user_Base, user_engine
 
 app = FastAPI()
 
+
 origins = ["*"]
 
 app.add_middleware(

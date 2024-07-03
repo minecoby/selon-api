@@ -14,11 +14,13 @@ class Notice(notice_Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     content = Column(String(1000))
 
+
 notice_Base.metadata.create_all(bind=notice_engine)
 
 class NoticeCreate(BaseModel):
     title: str
     content: str
+
 
 class NoticeUpdate(BaseModel):
     title: str = None
@@ -27,7 +29,9 @@ class NoticeUpdate(BaseModel):
 class NoticeResponse(BaseModel):
     id: int
     title: str
+    content: str
     created_at: datetime
+
 
     class Config:
         from_attributes = True
@@ -37,6 +41,7 @@ class NoticeInfo(BaseModel):
     title: str
     content: str
     created_at: datetime
+
 
 router = APIRouter()
 
@@ -50,7 +55,7 @@ def create_notice(notice: NoticeCreate, db: Session = Depends(get_noticedb)):
 
 
 
-@router.get("/notice/", response_model=List[NoticeResponse], tags=["notice"])
+@router.get("/notice", response_model=List[NoticeResponse], tags=["notice"])
 def read_notice(db: Session = Depends(get_noticedb)):
     db_notice = db.query(Notice).all()
     if db_notice is None:
