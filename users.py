@@ -97,7 +97,7 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get
 
 @router.get("/users/{user_id}", response_model=UserResponse, tags=["user"])
 def read_user(user_id: int, db: Session = Depends(get_userdb)):
-    db_user = db.query(User).filter(User.id == user_id).first()
+    db_user = db.query(User).filter(User.user_id == user_id).first()
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
