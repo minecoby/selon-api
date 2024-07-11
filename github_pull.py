@@ -3,8 +3,11 @@ import hmac
 import hashlib
 import subprocess
 from fastapi import HTTPException
-
-SECRET_TOKEN = b"74D55CAF58DFEF548645C15FA8EA4"
+from dotenv import load_dotenv
+import os
+load_dotenv()
+token = os.environ.get("GITHUB_TOKEN")
+SECRET_TOKEN = token
 
 async def handle_github_webhook(request):
     signature = request.headers.get('X-Hub-Signature-256')
