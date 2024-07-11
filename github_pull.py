@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 token = os.environ.get("GITHUB_TOKEN")
-SECRET_TOKEN = token
+SECRET_TOKEN = token.encode('utf-8')
 
 async def handle_github_webhook(request):
     signature = request.headers.get('X-Hub-Signature-256')
