@@ -44,10 +44,19 @@ class UserUpdate(BaseModel):
     nickname: Optional[str] = None
     grade: Optional[int] = None
 
-class UserResponse(BaseModel):
+class UserResponseLogin(BaseModel):
     user_id: str
     access_token : str
     token_type : str
+    class Config:
+        from_attributes = True
+
+class UserResponse(BaseModel):
+    user_id: str
+    realname: str
+    nickname: str
+    password: str
+    grade: int
     class Config:
         from_attributes = True
 
@@ -89,7 +98,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_userdb)):
         raise HTTPException(status_code=400, detail="user_id already registered")
     return db_user
 
-@router.post("/users/login", response_model=UserResponse, tags=["user"])
+@router.post("/users/login", response_model=UserResponseLogin, tags=["user"])
 def login_user(user: UserLogin, db: Session = Depends(get_userdb)):
     db_user = db.query(User).filter(User.user_id == user.user_id).first()
     if db_user is None or not verify_password(user.password, db_user.hashed_password):
