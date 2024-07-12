@@ -44,19 +44,11 @@ class UserResponseLogin(BaseModel):
         from_attributes = True
 
 class UserResponse(BaseModel):
-<<<<<<< HEAD
-    user_id: str
-    realname: str
-    nickname: str
-    password: str
-    grade: int
-=======
     id: int
     username: str
     nickname: Optional[str] = None
     grade: Optional[int] = None
 
->>>>>>> parent of 27e341b9 (로그인 모델 수정)
     class Config:
         from_attributes = True
 
@@ -70,20 +62,7 @@ def get_password_hash(password):
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
-<<<<<<< HEAD
-def create_access_token(data: dict, expires_delta: timedelta = None):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + expires_delta if expires_delta else datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-
-
-@router.post("/users/signup", response_model=UserResponse, tags=["user"])
-=======
 @router.post("/users/", response_model=UserResponse, tags=["user"])
->>>>>>> parent of 27e341b9 (로그인 모델 수정)
 def create_user(user: UserCreate, db: Session = Depends(get_userdb)):
     hashed_password = get_password_hash(user.password)
     db_user = User(
@@ -99,30 +78,12 @@ def create_user(user: UserCreate, db: Session = Depends(get_userdb)):
         raise HTTPException(status_code=400, detail="Username already registered")
     return db_user
 
-<<<<<<< HEAD
-@router.post("/users/login", response_model=UserResponseLogin, tags=["user"])
-def login_user(user: UserLogin, db: Session = Depends(get_userdb)):
-    db_user = db.query(User).filter(User.user_id == user.user_id).first()
-    if db_user is None or not verify_password(user.password, db_user.hashed_password):
-        raise HTTPException(status_code=400, detail="Invalid user_id or password")
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": db_user.user_id}, expires_delta=access_token_expires
-    )
-
-    return {
-        "user_id": db_user.user_id,
-        "access_token": access_token,
-        "token_type": "bearer"
-    }
-=======
 @router.post("/users/login", response_model=UserResponse, tags=["user"])
 def login_user(user: UserCreate, db: Session = Depends(get_userdb)):
     db_user = db.query(User).filter(User.username == user.username).first()
     if db_user is None or not verify_password(user.password, db_user.hashed_password):
         raise HTTPException(status_code=400, detail="Invalid username or password")
     return db_user
->>>>>>> parent of 27e341b9 (로그인 모델 수정)
 
 @router.patch("/users/{user_id}", response_model=UserResponse, tags=["user"])
 def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get_userdb)):
