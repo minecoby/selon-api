@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException,Security
+from fastapi import APIRouter, Depends, HTTPException, Security
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
 from passlib.context import CryptContext
 from typing import Optional
@@ -21,36 +20,32 @@ from database import user_Base, get_userdb, user_engine
 class User(user_Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(255), unique=True, index=True)
+    user_id = Column(String(255), unique=True, index=True)
     hashed_password = Column(String(255))
-    nickname = Column(String(255), unique=True, index=True, nullable=True)
-    grade = Column(Integer, nullable=True)
+    realname = Column(String(30), nullable=False)
+    nickname = Column(String(30), unique=True, nullable=False)
+    grade = Column(Integer)
 
 user_Base.metadata.create_all(bind=user_engine)
 
 class UserCreate(BaseModel):
-    username: str
+    user_id: str
+    password: str
+    realname: str
+    nickname: str
+    grade: int
+
+class UserLogin(BaseModel):
+    user_id: str
     password: str
 
-class UserUpdate(BaseModel):
-    nickname: Optional[str] = None
-    grade: Optional[int] = None
-
-class UserResponseLogin(BaseModel):
-    user_id: str
-    access_token : str
-    token_type : str
-    class Config:
-        from_attributes = True
 
 class UserResponse(BaseModel):
     id: int
-    username: str
-    nickname: Optional[str] = None
-    grade: Optional[int] = None
+    user_id: str
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -62,62 +57,41 @@ def get_password_hash(password):
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+def get_user(user_id: str, db: Session):
+    return db.query(User).filter(User.user_id == user_id).first()
+
 @router.post("/users/", response_model=UserResponse, tags=["user"])
 def create_user(user: UserCreate, db: Session = Depends(get_userdb)):
+    existing_user = get_user(user.user_id, db)
+    if existing_user:
+        raise HTTPException(status_code=409, detail="해당 아이디는 이미 존재합니다")
+
     hashed_password = get_password_hash(user.password)
-    db_user = User(
-        username=user.username,
-        hashed_password=hashed_password,
-    )
-    try:
-        db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(status_code=400, detail="Username already registered")
-    return db_user
-
-@router.post("/users/login", response_model=UserResponse, tags=["user"])
-def login_user(user: UserCreate, db: Session = Depends(get_userdb)):
-    db_user = db.query(User).filter(User.username == user.username).first()
-    if db_user is None or not verify_password(user.password, db_user.hashed_password):
-        raise HTTPException(status_code=400, detail="Invalid username or password")
-    return db_user
-
-@router.patch("/users/{user_id}", response_model=UserResponse, tags=["user"])
-def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get_userdb)):
-    db_user = db.query(User).filter(User.id == user_id).first()
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    if user_update.nickname is not None:
-        db_user.nickname = user_update.nickname
-    if user_update.grade is not None:
-        db_user.grade = user_update.grade
-
+    db_user = User(user_id=user.user_id, hashed_password=hashed_password, realname=user.realname, nickname=user.nickname, grade=user.grade)
+    db.add(db_user)
     db.commit()
     db.refresh(db_user)
+
     return db_user
 
-@router.get("/users/{user_id}", response_model=UserResponse, tags=["user"])
-def read_user(user_id: int, db: Session = Depends(get_userdb)):
-    db_user = db.query(User).filter(User.user_id == user_id).first()
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return db_user
+@router.post("/users/login", tags=["user"])
+def login_user(user: UserLogin, db: Session = Depends(get_userdb)):
+    db_user = db.query(User).filter(User.user_id == user.user_id).first()
+    if db_user is None or not verify_password(user.password, db_user.hashed_password):
+        raise HTTPException(status_code=400, detail="로그인 정보 불일치.")
 
-
-security = HTTPBearer()
-
-@router.get("/users/validate-token")
-def validate_token(credentials: HTTPAuthorizationCredentials = Security(security), db: Session = Depends(get_userdb)):
-    token = credentials.credentials
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        user_id = payload.get("sub")
-        if db.query(User).filter(User.user_id == user_id).first() is None:
-            raise HTTPException(status_code=404, detail="User not found")
-        return {"status": "valid", "user_id": user_id}
-    except jwt.PyJWTError as e:
-        raise HTTPException(status_code=403, detail="Invalid token")
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": db_user.user_id}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer", "user": db_user}
