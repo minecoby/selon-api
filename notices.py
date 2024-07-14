@@ -96,3 +96,10 @@ def delete_notice(notice_id: int, db: Session = Depends(get_noticedb)):
         raise HTTPException(status_code=404, detail="Notice not found")
     db.delete(db_notice)
     db.commit()
+
+@router.get("/notice_top5", response_model=List[NoticeResponse], tags=["notice"])
+def read_notice(db: Session = Depends(get_noticedb)):
+    db_notice = db.query(Notice).order_by(Notice.created_at.desc()).limit(5).all()
+    if not db_notice:
+        raise HTTPException(status_code=404, detail="Notice not found")
+    return db_notice
