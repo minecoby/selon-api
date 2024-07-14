@@ -45,7 +45,7 @@ class UserResponse(BaseModel):
     user_id: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -94,4 +94,4 @@ def login_user(user: UserLogin, db: Session = Depends(get_userdb)):
     access_token = create_access_token(
         data={"sub": db_user.user_id}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer", "user": db_user}
+    return {"access_token": access_token, "token_type": "bearer"}
