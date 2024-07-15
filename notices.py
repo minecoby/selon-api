@@ -13,6 +13,7 @@ class Notice(notice_Base):
     title = Column(String(255), unique=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     content = Column(String(1000))
+    url = Column(String(500))
     category = Column(String(255))
 
 
@@ -21,17 +22,20 @@ notice_Base.metadata.create_all(bind=notice_engine)
 class NoticeCreate(BaseModel):
     title: str
     content: str
+    url: str 
     category: str
 
 
 class NoticeUpdate(BaseModel):
-    title: str = None
-    content: str = None
+    title: str 
+    content: str 
+    url: str 
 
 class NoticeResponse(BaseModel):
     id: int
     title: str
     created_at: datetime
+    url: str 
     category: str
 
 
@@ -43,6 +47,7 @@ class NoticeInfo(BaseModel):
     title: str
     content: str
     category: str
+    url: str 
     created_at: datetime
 
 
@@ -50,7 +55,7 @@ router = APIRouter()
 
 @router.post("/notice/", response_model=NoticeResponse, tags=["notice"])
 def create_notice(notice: NoticeCreate, db: Session = Depends(get_noticedb)):
-    db_content = Notice(title=notice.title,content=notice.content,category=notice.category)
+    db_content = Notice(title=notice.title,content=notice.content,category=notice.category, url=notice.url)
     db.add(db_content)
     db.commit()
     db.refresh(db_content)
