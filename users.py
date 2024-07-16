@@ -157,18 +157,15 @@ def user_info(credentials: HTTPAuthorizationCredentials = Security(security), db
 @router.patch("/users/changepwd",tags=["user"])
 def change_password(user: UserPwd,credentials: HTTPAuthorizationCredentials = Security(security), db: Session = Depends(get_userdb)):
     token = credentials.credentials
-    try:
-        payload = decode_jwt(token)
-        user_id = payload.get("sub")
-        user_info = db.query(User).filter(User.user_id == user_id).one_or_none()
-        if not verify_password(user.password, user_info.hashed_password):
-            raise HTTPException(status_code=400, detail="현재 비밀번호가 올바르지 않습니다.")
-        user_info.hashed_password = get_password_hash(user.new_password)
-        db.commit()
-        db.refresh(user_info)
-        return HTTPException(status_code=200, detail="정상적으로 비밀번호가 변경되었습니다.")
-    except HTTPException as e:
-        return {"status": "invalid", "detail": e.detail}
+    payload = decode_jwt(token)
+    user_id = payload.get("sub")
+    user_info = db.query(User).filter(User.user_id == user_id).one_or_none()
+    if not verify_password(user.password, user_info.hashed_password):
+        raise HTTPException(status_code=400, detail="현재 비밀번호가 올바르지 않습니다.")
+    user_info.hashed_password = get_password_hash(user.new_password)
+    db.commit()
+    db.refresh(user_info)
+    return HTTPException(status_code=200, detail="정상적으로 비밀번호가 변경되었습니다.")
 
 @router.get("/check_token", tags=["user"])
 def check_token(credentials: HTTPAuthorizationCredentials = Security(security)):
