@@ -80,6 +80,8 @@ def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 def get_user(user_id: str, db: Session):
     return db.query(User).filter(User.user_id == user_id).first()
+def get_user_nickname(nickname: str, db: Session):
+    return db.query(User).filter(User.nickname == nickname).first()
 
 def decode_jwt(token: str):
     try:
@@ -108,6 +110,9 @@ def create_user(user: UserCreate, db: Session = Depends(get_userdb)):
     existing_user = get_user(user.user_id, db)
     if existing_user:
         raise HTTPException(status_code=409, detail="해당 아이디는 이미 존재합니다")
+    existing_user_name = get_user_nickname(user.nickname, db)
+    if existing_user_name:
+        raise HTTPException(status_code=409, detail="해당 닉네임은 이미 존재합니다")
 
     hashed_password = get_password_hash(user.password)
     db_user = User(user_id=user.user_id, hashed_password=hashed_password, realname=user.realname, nickname=user.nickname, grade=user.grade)
