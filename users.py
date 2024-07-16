@@ -44,6 +44,8 @@ class UserPwd(BaseModel):
     password: str
     new_password: str
 
+class UserName(BaseModel):
+    nickname: str
 class UserResponse(BaseModel):
     id: int
     user_id: str
@@ -166,6 +168,20 @@ def change_password(user: UserPwd,credentials: HTTPAuthorizationCredentials = Se
     db.commit()
     db.refresh(user_info)
     return HTTPException(status_code=200, detail="정상적으로 비밀번호가 변경되었습니다.")
+
+@router.patch("/users/changenickname",tags=["user"])
+def change_nickname(user: UserName,credentials: HTTPAuthorizationCredentials = Security(security), db: Session = Depends(get_userdb)):
+    token = credentials.credentials
+    payload = decode_jwt(token)
+    user_id = payload.get("sub")
+    existing_user_name = get_user_nickname(user.nickname, db)
+    if existing_user_name:
+        raise HTTPException(status_code=409, detail="해당 닉네임은 이미 존재합니다")
+    user_info = db.query(User).filter(User.user_id == user_id).one_or_none()
+    user_info.nickname = user.nickname
+    db.commit()
+    db.refresh(user_info)
+    return HTTPException(status_code=200, detail="정상적으로 닉네임이 변경되었습니다.")
 
 @router.get("/check_token", tags=["user"])
 def check_token(credentials: HTTPAuthorizationCredentials = Security(security)):
