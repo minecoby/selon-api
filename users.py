@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import os
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-
+from typing import List
 load_dotenv()
 
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES"))
@@ -47,7 +47,9 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
+class UserInfo(BaseModel):
+    realname: str
+    nickname: str
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter()
@@ -98,12 +100,12 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Security(securi
     user_id: str = payload.get("sub")
     if user_id is None:
         raise HTTPException(status_code=401, detail="Invalid token")
-    
     user = get_user(user_id, db)
     if user is None:
         raise HTTPException(status_code=401, detail="User not found")
-    
     return user
+
+
 
 @router.post("/users/", response_model=UserResponse, tags=["user"])
 def create_user(user: UserCreate, db: Session = Depends(get_userdb)):
@@ -138,6 +140,31 @@ def login_user(user: UserLogin, db: Session = Depends(get_userdb)):
     )
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
+@router.get("/users/info",response_model=UserInfo, tags=["user"])
+def user_info(credentials: HTTPAuthorizationCredentials = Security(security), db: Session = Depends(get_userdb)):
+    token = credentials.credentials
+    try:
+        payload = decode_jwt(token)
+        user_id = payload.get("sub")
+        user_info = db.query(User).filter(User.user_id == user_id).one_or_none()
+        return UserInfo(realname=user_info.realname, nickname=user_info.nickname)
+    except HTTPException as e:
+        return {"status": "invalid", "detail": e.detail}
+
+@router.patch("/users/pwdpatch",tags=["user"])
+def user_info(pwd : str, credentials: HTTPAuthorizationCredentials = Security(security), db: Session = Depends(get_userdb)):
+    token = credentials.credentials
+    try:
+        payload = decode_jwt(token)
+        user_id = payload.get("sub")
+        user_info = db.query(User).filter(User.user_id == user_id).one_or_none()
+        user_info.hashed_password = get_password_hash(pwd)
+        db.commit()
+        db.refresh(user_info)
+        return HTTPException(status_code=200, detail="정상적으로 비밀번호가 변경되었습니다.")
+    except HTTPException as e:
+        return {"status": "invalid", "detail": e.detail}
+
 @router.get("/check_token", tags=["user"])
 def check_token(credentials: HTTPAuthorizationCredentials = Security(security)):
     token = credentials.credentials
@@ -146,7 +173,7 @@ def check_token(credentials: HTTPAuthorizationCredentials = Security(security)):
         return {"status": "valid", "user_id": payload.get("sub")}
     except HTTPException as e:
         return {"status": "invalid", "detail": e.detail}
-    
+
 @router.post("/refresh_token", tags=["user"])
 def refresh_token(credentials: HTTPAuthorizationCredentials = Security(security)):
     token = credentials.credentials
