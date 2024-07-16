@@ -151,8 +151,8 @@ def user_info(credentials: HTTPAuthorizationCredentials = Security(security), db
     except HTTPException as e:
         return {"status": "invalid", "detail": e.detail}
 
-@router.patch("/users/pwdpatch",tags=["user"])
-def user_info(pwd : str, credentials: HTTPAuthorizationCredentials = Security(security), db: Session = Depends(get_userdb)):
+@router.patch("/users/changepwd",tags=["user"])
+def change_password(pwd : str, credentials: HTTPAuthorizationCredentials = Security(security), db: Session = Depends(get_userdb)):
     token = credentials.credentials
     try:
         payload = decode_jwt(token)
