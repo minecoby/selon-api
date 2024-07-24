@@ -4,18 +4,32 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List
 from datetime import datetime
-
+import pytz
 from database import notice_Base, get_noticedb, notice_engine
+
+# class Notice(notice_Base):
+#     __tablename__ = "notification"
+#     id = Column(Integer, primary_key=True, index=True)
+#     title = Column(String(255), unique=True)
+#     created_at = Column(DateTime, default=lambda: datetime.now(pytz.timezone('Asia/Seoul')))
+#     content = Column(String(1000))
+#     url = Column(String(500))
+#     category = Column(String(255), index = True)
+#     deadline = Column(String(40))
+
+def get_korean_time():
+    seoul_tz = pytz.timezone('Asia/Seoul')
+    return datetime.now(seoul_tz).strftime('%Y/%m/%d - %H시 %M분')
 
 class Notice(notice_Base):
     __tablename__ = "notification"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), unique=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(String(30), default=get_korean_time)
     content = Column(String(1000))
     url = Column(String(500))
-    category = Column(String(255))
-
+    category = Column(String(255), index=True)
+    deadline = Column(String(40))
 
 notice_Base.metadata.create_all(bind=notice_engine)
 
@@ -24,6 +38,7 @@ class NoticeCreate(BaseModel):
     content: str
     url: str 
     category: str
+    deadline: str
 
 
 class NoticeUpdate(BaseModel):
@@ -34,10 +49,10 @@ class NoticeUpdate(BaseModel):
 class NoticeResponse(BaseModel):
     id: int
     title: str
-    created_at: datetime
+    created_at: str
     url: str 
     category: str
-
+    deadline: str
 
     class Config:
         from_attributes = True
@@ -48,7 +63,8 @@ class NoticeInfo(BaseModel):
     content: str
     category: str
     url: str 
-    created_at: datetime
+    created_at: str
+    deadline: str
 
 def get_title(title: str, db: Session):
     return db.query(Notice).filter(Notice.title == title).first()
@@ -56,8 +72,8 @@ router = APIRouter()
 
 @router.post("/notice/", response_model=NoticeResponse, tags=["notice"])
 def create_notice(notice: NoticeCreate, db: Session = Depends(get_noticedb)):
-    db_content = Notice(title=notice.title,content=notice.content,category=notice.category, url=notice.url)
-    if notice.category != ("totalCouncil" or "departmentCouncil" or "departmentNotice" or "applyRecruit"):
+    db_content = Notice(title=notice.title,content=notice.content,category=notice.category, url=notice.url, deadline=notice.deadline)
+    if notice.category != "totalCouncil" and notice.category != "totalCouncil" and notice.category != "departmentCouncil" and notice.category !="applyRecruit":
         raise HTTPException(status_code=412 , detail= "유효하지않은 공지사항카테고리입니다.")
     existing_title = get_title(notice.title, db)
     if existing_title:

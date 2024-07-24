@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
-from database import get_noticedb
+from database import get_communitydb
 from board import Post, Comment
 
 class PostCreate(BaseModel):
@@ -18,7 +18,7 @@ class PostResponse(BaseModel):
     id: int
     title: str
     content: str
-    created_at: datetime
+    created_at: str
     likes: int
 
     class Config:
@@ -35,7 +35,7 @@ class CommentResponse(BaseModel):
     id: int
     post_id: int
     content: str
-    created_at: datetime
+    created_at: str
     likes: int
 
     class Config:
@@ -44,7 +44,7 @@ class CommentResponse(BaseModel):
 router = APIRouter()
 
 @router.post("/posts/", response_model=PostResponse, tags=["board"])
-def create_post(post: PostCreate, db: Session = Depends(get_noticedb)):
+def create_post(post: PostCreate, db: Session = Depends(get_communitydb)):
     db_post = Post(title=post.title, content=post.content)
     db.add(db_post)
     db.commit()
@@ -52,11 +52,11 @@ def create_post(post: PostCreate, db: Session = Depends(get_noticedb)):
     return db_post
 
 @router.get("/posts/", response_model=List[PostResponse], tags=["board"])
-def read_posts(db: Session = Depends(get_noticedb)):
+def read_posts(db: Session = Depends(get_communitydb)):
     return db.query(Post).all()
 
 @router.post("/comments/", response_model=CommentResponse, tags=["board"])
-def create_comment(comment: CommentCreate, db: Session = Depends(get_noticedb)):
+def create_comment(comment: CommentCreate, db: Session = Depends(get_communitydb)):
     db_comment = Comment(content=comment.content, post_id=comment.post_id)
     db.add(db_comment)
     db.commit()
@@ -64,11 +64,11 @@ def create_comment(comment: CommentCreate, db: Session = Depends(get_noticedb)):
     return db_comment
 
 @router.get("/comments/", response_model=List[CommentResponse], tags=["board"])
-def read_comments(db: Session = Depends(get_noticedb)):
+def read_comments(db: Session = Depends(get_communitydb)):
     return db.query(Comment).all()
 
 @router.post("/posts/{post_id}/like", response_model=PostResponse, tags=["board"])
-def like_post(post_id: int, db: Session = Depends(get_noticedb)):
+def like_post(post_id: int, db: Session = Depends(get_communitydb)):
     db_post = db.query(Post).filter(Post.id == post_id).first()
     if db_post is None:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -78,7 +78,7 @@ def like_post(post_id: int, db: Session = Depends(get_noticedb)):
     return db_post
 
 @router.post("/comments/{comment_id}/like", response_model=CommentResponse, tags=["board"])
-def like_comment(comment_id: int, db: Session = Depends(get_noticedb)):
+def like_comment(comment_id: int, db: Session = Depends(get_communitydb)):
     db_comment = db.query(Comment).filter(Comment.id == comment_id).first()
     if db_comment is None:
         raise HTTPException(status_code=404, detail="Comment not found")
@@ -88,7 +88,7 @@ def like_comment(comment_id: int, db: Session = Depends(get_noticedb)):
     return db_comment
 
 @router.patch("/posts/{post_id}", response_model=PostResponse, tags=["board"])
-def update_post(post_id: int, post: PostUpdate, db: Session = Depends(get_noticedb)):
+def update_post(post_id: int, post: PostUpdate, db: Session = Depends(get_communitydb)):
     db_post = db.query(Post).filter(Post.id == post_id).first()
     if db_post is None:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -101,7 +101,7 @@ def update_post(post_id: int, post: PostUpdate, db: Session = Depends(get_notice
     return db_post
 
 @router.delete("/posts/{post_id}", tags=["board"])
-def delete_post(post_id: int, db: Session = Depends(get_noticedb)):
+def delete_post(post_id: int, db: Session = Depends(get_communitydb)):
     db_post = db.query(Post).filter(Post.id == post_id).first()
     if db_post is None:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -110,7 +110,7 @@ def delete_post(post_id: int, db: Session = Depends(get_noticedb)):
     return {"message": "Post deleted successfully"}
 
 @router.patch("/comments/{comment_id}", response_model=CommentResponse, tags=["board"])
-def update_comment(comment_id: int, comment: CommentUpdate, db: Session = Depends(get_noticedb)):
+def update_comment(comment_id: int, comment: CommentUpdate, db: Session = Depends(get_communitydb)):
     db_comment = db.query(Comment).filter(Comment.id == comment_id).first()
     if db_comment is None:
         raise HTTPException(status_code=404, detail="Comment not found")
@@ -121,7 +121,7 @@ def update_comment(comment_id: int, comment: CommentUpdate, db: Session = Depend
     return db_comment
 
 @router.delete("/comments/{comment_id}", tags=["board"])
-def delete_comment(comment_id: int, db: Session = Depends(get_noticedb)):
+def delete_comment(comment_id: int, db: Session = Depends(get_communitydb)):
     db_comment = db.query(Comment).filter(Comment.id == comment_id).first()
     if db_comment is None:
         raise HTTPException(status_code=404, detail="Comment not found")
@@ -130,7 +130,7 @@ def delete_comment(comment_id: int, db: Session = Depends(get_noticedb)):
     return {"message": "Comment deleted successfully"}
 
 @router.post("/posts/{post_id}/unlike", response_model=PostResponse, tags=["board"])
-def unlike_post(post_id: int, db: Session = Depends(get_noticedb)):
+def unlike_post(post_id: int, db: Session = Depends(get_communitydb)):
     db_post = db.query(Post).filter(Post.id == post_id).first()
     if db_post is None:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -141,7 +141,7 @@ def unlike_post(post_id: int, db: Session = Depends(get_noticedb)):
     return db_post
 
 @router.post("/comments/{comment_id}/unlike", response_model=CommentResponse, tags=["board"])
-def unlike_comment(comment_id: int, db: Session = Depends(get_noticedb)):
+def unlike_comment(comment_id: int, db: Session = Depends(get_communitydb)):
     db_comment = db.query(Comment).filter(Comment.id == comment_id).first()
     if db_comment is None:
         raise HTTPException(status_code=404, detail="Comment not found")
