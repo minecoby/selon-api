@@ -4,7 +4,7 @@ from typing import List
 from data.database import get_noticedb
 from data.models import Notice
 from data.schema import NoticeUpdate, NoticeCreate, NoticeInfo, NoticeResponse
-from crud import get_title
+from .crud import get_title
 
 router = APIRouter()
 

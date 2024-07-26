@@ -5,7 +5,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from data.models import User
 from data.database import get_userdb
 from data.schema import UserCreate,UserInfo,UserLogin,UserName,UserPwd,UserResponse
-from crud import get_current_user,get_password_hash,get_user,get_user_nickname,get_userdb,verify_password,create_access_token,create_refresh_token,decode_jwt,ACCESS_TOKEN_EXPIRE_MINUTES,REFRESH_TOKEN_EXPIRE_MINUTES
+from .crud import get_current_user,get_password_hash,get_user,get_user_nickname,get_userdb,verify_password,create_access_token,create_refresh_token,decode_jwt,ACCESS_TOKEN_EXPIRE_MINUTES,REFRESH_TOKEN_EXPIRE_MINUTES
 router = APIRouter()
 security = HTTPBearer()
 
