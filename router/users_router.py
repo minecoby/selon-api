@@ -1,77 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Security
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
-from typing import Optional
-import jwt
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
-import os
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from models import User
-from database import get_userdb
-from schema import UserCreate,UserInfo,UserLogin,UserName,UserPwd,UserResponse
-load_dotenv()
-
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES"))
-REFRESH_TOKEN_EXPIRE_MINUTES = int(os.environ.get("REFRESH_TOKEN_EXPIRE_MINUTES"))
-SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
-ALGORITHM = os.environ.get("ALGORITHM")
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+from data.models import User
+from data.database import get_userdb
+from data.schema import UserCreate,UserInfo,UserLogin,UserName,UserPwd,UserResponse
+from crud import get_current_user,get_password_hash,get_user,get_user_nickname,get_userdb,verify_password,create_access_token,create_refresh_token,decode_jwt,ACCESS_TOKEN_EXPIRE_MINUTES,REFRESH_TOKEN_EXPIRE_MINUTES
 router = APIRouter()
 security = HTTPBearer()
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-def get_user(user_id: str, db: Session):
-    return db.query(User).filter(User.user_id == user_id).first()
-def get_user_nickname(nickname: str, db: Session):
-    return db.query(User).filter(User.nickname == nickname).first()
-
-def decode_jwt(token: str):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security), db: Session = Depends(get_userdb)):
-    token = credentials.credentials
-    payload = decode_jwt(token)
-    user_id: str = payload.get("sub")
-    if user_id is None:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    user = get_user(user_id, db)
-    if user is None:
-        raise HTTPException(status_code=401, detail="User not found")
-    return user
-
 
 
 @router.post("/users/", response_model=UserResponse, tags=["user"])
@@ -160,8 +96,6 @@ def refresh_token(credentials: HTTPAuthorizationCredentials = Security(security)
     try:
         payload = decode_jwt(token)
         user_id: str = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(data={"sub": user_id}, expires_delta=access_token_expires)
         return {"access_token": access_token, "token_type": "bearer"}

@@ -4,13 +4,11 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List
 from datetime import datetime
-from database import notice_Base, get_noticedb, notice_engine
-from models import Notice
-from schema import NoticeUpdate, NoticeCreate, NoticeInfo, NoticeResponse
+from data.database import notice_Base, get_noticedb, notice_engine
+from data.models import Notice
+from data.schema import NoticeUpdate, NoticeCreate, NoticeInfo, NoticeResponse
+from crud import get_title
 
-
-def get_title(title: str, db: Session):
-    return db.query(Notice).filter(Notice.title == title).first()
 router = APIRouter()
 
 @router.post("/notice/", response_model=NoticeResponse, tags=["notice"])

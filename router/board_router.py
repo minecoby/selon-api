@@ -1,30 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, Security
 from sqlalchemy.orm import Session
 from typing import List
-from database import get_communitydb,get_userdb
-from models import Post, Comment
+from data.database import get_communitydb,get_userdb
+from data.models import Post, Comment
 from users_router import User
-import jwt
 import os
 from dotenv import load_dotenv
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from schema import PostCreate,PostResponse,PostUpdate,CommentCreate,CommentResponse,CommentUpdate
+from data.schema import PostCreate,PostResponse,PostUpdate,CommentCreate,CommentResponse,CommentUpdate
+from crud import decode_jwt
 load_dotenv()
-
-SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
-ALGORITHM = os.environ.get("ALGORITHM")
 
 router = APIRouter()
 security = HTTPBearer()
 
-def decode_jwt(token: str):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
 
 @router.post("/posts/", response_model=PostResponse, tags=["board"])
 def create_post(post: PostCreate, credentials: HTTPAuthorizationCredentials = Security(security), db: Session = Depends(get_communitydb), user_db: Session = Depends(get_userdb)):
