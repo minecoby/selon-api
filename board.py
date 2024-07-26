@@ -12,6 +12,7 @@ def get_korean_time():
 class Post(community_Base):
     __tablename__ = "posts"
     id = Column(Integer, primary_key=True, index=True)
+    user_name = Column(String(30),index=True)
     title = Column(String(255), index=True)
     content = Column(String(2000))
     created_at = Column(String(30), default=get_korean_time)
@@ -22,6 +23,7 @@ class Comment(community_Base):
     __tablename__ = "comments"
     id = Column(Integer, primary_key=True, index=True)
     post_id = Column(Integer, ForeignKey('posts.id'))
+    user_name = Column(String(30),index=True)
     content = Column(String(1000))
     created_at = Column(String(30), default=get_korean_time)
     likes = Column(Integer, default=0)

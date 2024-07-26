@@ -1,10 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Security
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
-from database import get_communitydb
+from database import get_communitydb,get_userdb
 from board import Post, Comment
+from users import User
+import jwt
+import os
+from dotenv import load_dotenv
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+load_dotenv()
+
+SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+ALGORITHM = os.environ.get("ALGORITHM")
+
 
 class PostCreate(BaseModel):
     title: str
@@ -18,6 +28,7 @@ class PostResponse(BaseModel):
     id: int
     title: str
     content: str
+    user_name: str
     created_at: str
     likes: int
 
@@ -35,6 +46,7 @@ class CommentResponse(BaseModel):
     id: int
     post_id: int
     content: str
+    user_name: str
     created_at: str
     likes: int
 
@@ -42,10 +54,24 @@ class CommentResponse(BaseModel):
         from_attributes = True
 
 router = APIRouter()
+security = HTTPBearer()
+
+def decode_jwt(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 @router.post("/posts/", response_model=PostResponse, tags=["board"])
-def create_post(post: PostCreate, db: Session = Depends(get_communitydb)):
-    db_post = Post(title=post.title, content=post.content)
+def create_post(post: PostCreate, credentials: HTTPAuthorizationCredentials = Security(security), db: Session = Depends(get_communitydb), user_db: Session = Depends(get_userdb)):
+    token = credentials.credentials
+    payload = decode_jwt(token)
+    user_id = payload.get("sub")
+    user_info = user_db.query(User).filter(User.user_id == user_id).one_or_none()
+    db_post = Post(title=post.title, content=post.content, user_name = user_info.nickname)
     db.add(db_post)
     db.commit()
     db.refresh(db_post)
@@ -56,8 +82,12 @@ def read_posts(db: Session = Depends(get_communitydb)):
     return db.query(Post).all()
 
 @router.post("/comments/", response_model=CommentResponse, tags=["board"])
-def create_comment(comment: CommentCreate, db: Session = Depends(get_communitydb)):
-    db_comment = Comment(content=comment.content, post_id=comment.post_id)
+def create_comment(comment: CommentCreate, credentials: HTTPAuthorizationCredentials = Security(security),  db: Session = Depends(get_communitydb), user_db: Session = Depends(get_userdb)):
+    token = credentials.credentials
+    payload = decode_jwt(token)
+    user_id = payload.get("sub")
+    user_info = user_db.query(User).filter(User.user_id == user_id).one_or_none()
+    db_comment = Comment(content=comment.content, post_id=comment.post_id, user_name = user_info.nickname)
     db.add(db_comment)
     db.commit()
     db.refresh(db_comment)
@@ -66,6 +96,14 @@ def create_comment(comment: CommentCreate, db: Session = Depends(get_communitydb
 @router.get("/comments/", response_model=List[CommentResponse], tags=["board"])
 def read_comments(db: Session = Depends(get_communitydb)):
     return db.query(Comment).all()
+
+@router.get("/posts/{post_id}/comments", response_model=List[CommentResponse], tags=["board"])
+def read_comments_by_post(post_id: int, db: Session = Depends(get_communitydb)):
+    db_post = db.query(Post).filter(Post.id == post_id).first()
+    if db_post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    comments = db.query(Comment).filter(Comment.post_id == post_id).all()
+    return comments
 
 @router.post("/posts/{post_id}/like", response_model=PostResponse, tags=["board"])
 def like_post(post_id: int, db: Session = Depends(get_communitydb)):

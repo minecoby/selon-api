@@ -7,15 +7,7 @@ from datetime import datetime
 import pytz
 from database import notice_Base, get_noticedb, notice_engine
 
-# class Notice(notice_Base):
-#     __tablename__ = "notification"
-#     id = Column(Integer, primary_key=True, index=True)
-#     title = Column(String(255), unique=True)
-#     created_at = Column(DateTime, default=lambda: datetime.now(pytz.timezone('Asia/Seoul')))
-#     content = Column(String(1000))
-#     url = Column(String(500))
-#     category = Column(String(255), index = True)
-#     deadline = Column(String(40))
+
 
 def get_korean_time():
     seoul_tz = pytz.timezone('Asia/Seoul')
@@ -73,7 +65,7 @@ router = APIRouter()
 @router.post("/notice/", response_model=NoticeResponse, tags=["notice"])
 def create_notice(notice: NoticeCreate, db: Session = Depends(get_noticedb)):
     db_content = Notice(title=notice.title,content=notice.content,category=notice.category, url=notice.url, deadline=notice.deadline)
-    if notice.category != "totalCouncil" and notice.category != "totalCouncil" and notice.category != "departmentCouncil" and notice.category !="applyRecruit":
+    if notice.category != "totalCouncil" and notice.category != "departmentNotice" and notice.category != "departmentCouncil" and notice.category !="applyRecruit":
         raise HTTPException(status_code=412 , detail= "유효하지않은 공지사항카테고리입니다.")
     existing_title = get_title(notice.title, db)
     if existing_title:
