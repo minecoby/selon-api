@@ -1,10 +1,10 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from users import router as users_router
-from notices import router as notices_router
-from board_router import router as board_router
+from router.users_router import router as users_router
+from router.notices_router import router as notices_router
+from router.board_router import router as board_router
 from github_pull import handle_github_webhook
-from database import user_Base, user_engine
+from data.database import user_Base, user_engine
 
 app = FastAPI()
 

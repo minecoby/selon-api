@@ -1,10 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
 from typing import List
-from datetime import datetime
-from data.database import notice_Base, get_noticedb, notice_engine
+from data.database import get_noticedb
 from data.models import Notice
 from data.schema import NoticeUpdate, NoticeCreate, NoticeInfo, NoticeResponse
 from crud import get_title
