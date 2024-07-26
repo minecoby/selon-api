@@ -1,7 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Security
-from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
 from passlib.context import CryptContext
 from typing import Optional
 import jwt
@@ -9,52 +7,16 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import os
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import List
+from models import User
+from database import get_userdb
+from schema import UserCreate,UserInfo,UserLogin,UserName,UserPwd,UserResponse
 load_dotenv()
 
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES"))
 REFRESH_TOKEN_EXPIRE_MINUTES = int(os.environ.get("REFRESH_TOKEN_EXPIRE_MINUTES"))
 SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 ALGORITHM = os.environ.get("ALGORITHM")
-from database import user_Base, get_userdb, user_engine
 
-class User(user_Base):
-    __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(String(255), unique=True, index=True)
-    hashed_password = Column(String(255))
-    realname = Column(String(30), nullable=False)
-    nickname = Column(String(30), unique=True, nullable=False)
-    grade = Column(Integer)
-
-user_Base.metadata.create_all(bind=user_engine)
-
-class UserCreate(BaseModel):
-    user_id: str
-    password: str
-    realname: str
-    nickname: str
-    grade: int
-
-class UserLogin(BaseModel):
-    user_id: str
-    password: str
-
-class UserPwd(BaseModel):
-    password: str
-    new_password: str
-
-class UserName(BaseModel):
-    nickname: str
-class UserResponse(BaseModel):
-    id: int
-    user_id: str
-
-    class Config:
-        from_attributes = True
-class UserInfo(BaseModel):
-    realname: str
-    nickname: str
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter()

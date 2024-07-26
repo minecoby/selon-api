@@ -4,59 +4,10 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List
 from datetime import datetime
-import pytz
 from database import notice_Base, get_noticedb, notice_engine
+from models import Notice
+from schema import NoticeUpdate, NoticeCreate, NoticeInfo, NoticeResponse
 
-
-
-def get_korean_time():
-    seoul_tz = pytz.timezone('Asia/Seoul')
-    return datetime.now(seoul_tz).strftime('%Y/%m/%d - %H시 %M분')
-
-class Notice(notice_Base):
-    __tablename__ = "notification"
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(255), unique=True)
-    created_at = Column(String(30), default=get_korean_time)
-    content = Column(String(1000))
-    url = Column(String(500))
-    category = Column(String(255), index=True)
-    deadline = Column(String(40))
-
-notice_Base.metadata.create_all(bind=notice_engine)
-
-class NoticeCreate(BaseModel):
-    title: str
-    content: str
-    url: str 
-    category: str
-    deadline: str
-
-
-class NoticeUpdate(BaseModel):
-    title: str 
-    content: str 
-    url: str 
-
-class NoticeResponse(BaseModel):
-    id: int
-    title: str
-    created_at: str
-    url: str 
-    category: str
-    deadline: str
-
-    class Config:
-        from_attributes = True
-        
-class NoticeInfo(BaseModel):
-    id : int
-    title: str
-    content: str
-    category: str
-    url: str 
-    created_at: str
-    deadline: str
 
 def get_title(title: str, db: Session):
     return db.query(Notice).filter(Notice.title == title).first()

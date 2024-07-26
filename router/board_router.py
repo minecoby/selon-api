@@ -1,57 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, Security
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from typing import List, Optional
-from datetime import datetime
+from typing import List
 from database import get_communitydb,get_userdb
-from board import Post, Comment
-from users import User
+from models import Post, Comment
+from users_router import User
 import jwt
 import os
 from dotenv import load_dotenv
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from schema import PostCreate,PostResponse,PostUpdate,CommentCreate,CommentResponse,CommentUpdate
 load_dotenv()
 
 SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 ALGORITHM = os.environ.get("ALGORITHM")
-
-
-class PostCreate(BaseModel):
-    title: str
-    content: str
-
-class PostUpdate(BaseModel):
-    title: Optional[str] = None
-    content: Optional[str] = None
-
-class PostResponse(BaseModel):
-    id: int
-    title: str
-    content: str
-    user_name: str
-    created_at: str
-    likes: int
-
-    class Config:
-        from_attributes = True
-
-class CommentCreate(BaseModel):
-    post_id: int
-    content: str
-
-class CommentUpdate(BaseModel):
-    content: Optional[str] = None
-
-class CommentResponse(BaseModel):
-    id: int
-    post_id: int
-    content: str
-    user_name: str
-    created_at: str
-    likes: int
-
-    class Config:
-        from_attributes = True
 
 router = APIRouter()
 security = HTTPBearer()
