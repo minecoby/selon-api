@@ -67,7 +67,19 @@ selon-api-main/
 ├── notices.py
 ├── requirements.txt
 ├── test.db
-└── users.py
+├── users.py
+├── data/
+│   ├── __pycache__/
+│   ├── database.py
+│   ├── models.py
+│   ├── schema.py
+├── router/
+    ├── __pycache__/
+    ├── __init__.py
+    ├── board_router.py
+    ├── crud.py
+    ├── notices_router.py
+    ├── users_router.py
 ```
 
 ### 파일 설명
@@ -75,10 +87,10 @@ selon-api-main/
 - `main.py`: FastAPI 애플리케이션의 main코드입니다. 사용자 및 공지사항 라우터를 포함하고 있으며, CORS 설정이 포함되어 있습니다.
 - `database.py`: 데이터베이스 설정 및 초기화를 담당합니다.
 - `github_pull.py`: GitHub 웹훅을 처리하는 기능을 포함하고 있습니다.
-- `notices.py`: 공지사항 관련 API를 정의하고 있습니다.
-- `users.py`: 사용자 관련 API를 정의하고 있으며, 비밀번호 해시화 및 사용자 인증 기능을 포함하고 있습니다.
+- `notices_router.py`: 공지사항 관련 API를 정의하고 있습니다.
+- `users_router.py`: 사용자 관련 API를 정의하고 있으며, 비밀번호 해시화 및 사용자 인증 기능을 포함하고 있습니다.
+- `board_router.py`: 커뮤니티 게시판 관련 API를 정의하고 있습니다.
 - `requirements.txt`: 프로젝트에 필요한 모든 버전을 관리합니다.
-- `test.db`: SQLite 데이터베이스 파일입니다.
 
 ### 주요 기능
 
