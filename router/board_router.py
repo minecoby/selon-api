@@ -4,7 +4,6 @@ from typing import List
 from data.database import get_communitydb,get_userdb
 from data.models import Post, Comment
 from .users_router import User
-import os
 from dotenv import load_dotenv
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from data.schema import PostCreate,PostResponse,PostUpdate,CommentCreate,CommentResponse,CommentUpdate

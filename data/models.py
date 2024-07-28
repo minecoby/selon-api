@@ -18,6 +18,15 @@ class Notice(notice_Base):
     category = Column(String(255), index=True)
     deadline = Column(String(40))
 
+class User(user_Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(255), unique=True, index=True)
+    hashed_password = Column(String(255))
+    realname = Column(String(30), nullable=False)
+    nickname = Column(String(30), unique=True, nullable=False)
+    grade = Column(Integer)
+
 class Post(community_Base):
     __tablename__ = "posts"
     id = Column(Integer, primary_key=True, index=True)
@@ -37,15 +46,6 @@ class Comment(community_Base):
     created_at = Column(String(30), default=get_korean_time)
     likes = Column(Integer, default=0)
     post = relationship("Post", back_populates="comments")
-
-class User(user_Base):
-    __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(String(255), unique=True, index=True)
-    hashed_password = Column(String(255))
-    realname = Column(String(30), nullable=False)
-    nickname = Column(String(30), unique=True, nullable=False)
-    grade = Column(Integer)
 
 community_Base.metadata.create_all(bind=community_engine)
 notice_Base.metadata.create_all(bind=notice_engine)
