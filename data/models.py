@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
-from data.database import community_Base, notice_Base,user_Base,user_engine, notice_engine, community_engine
+from data.database import community_Base, notice_Base, user_Base, alarm_Base, community_engine, notice_engine, user_engine, alarm_engine
 from datetime import datetime
 import pytz
 
@@ -47,6 +47,17 @@ class Comment(community_Base):
     likes = Column(Integer, default=0)
     post = relationship("Post", back_populates="comments")
 
+class Alarm(alarm_Base):
+    __tablename__ = "alarm"
+    id = Column(Integer, primary_key=True, index=True)
+    device_token = Column(String(500))
+    check_totalcouncil = Column(Boolean)
+    check_departcouncil = Column(Boolean)
+    check_depart = Column(Boolean)
+    check_apply = Column(Boolean)
+
+
 community_Base.metadata.create_all(bind=community_engine)
 notice_Base.metadata.create_all(bind=notice_engine)
 user_Base.metadata.create_all(bind=user_engine)
+alarm_Base.metadata.create_all(bind=alarm_engine)

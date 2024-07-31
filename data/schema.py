@@ -100,3 +100,19 @@ class CommentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class CreateDeviceToken(BaseModel):
+    device_token: str
+    check_totalcouncil: bool
+    check_departcouncil: bool
+    check_depart: bool
+    check_apply: bool
+
+class DeviceToken(BaseModel):
+    device_token: str
+
+class AlarmInfo(BaseModel):
+    check_totalcouncil: bool
+    check_departcouncil: bool
+    check_depart: bool
+    check_apply: bool

@@ -8,13 +8,14 @@ from dotenv import load_dotenv
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from data.schema import PostCreate,PostResponse,PostUpdate,CommentCreate,CommentResponse,CommentUpdate
 from .crud import decode_jwt
+
 load_dotenv()
 
 router = APIRouter()
 security = HTTPBearer()
 
 
-@router.post("/posts/", response_model=PostResponse, tags=["board"])
+@router.post("/posts", response_model=PostResponse, tags=["board"])
 def create_post(post: PostCreate, credentials: HTTPAuthorizationCredentials = Security(security), db: Session = Depends(get_communitydb), user_db: Session = Depends(get_userdb)):
     token = credentials.credentials
     payload = decode_jwt(token)
@@ -26,9 +27,17 @@ def create_post(post: PostCreate, credentials: HTTPAuthorizationCredentials = Se
     db.refresh(db_post)
     return db_post
 
-@router.get("/posts/", response_model=List[PostResponse], tags=["board"])
+@router.get("/posts/all", response_model=List[PostResponse], tags=["board"])
 def read_posts(db: Session = Depends(get_communitydb)):
     return db.query(Post).all()
+
+@router.get("/posts/mywrite", response_model=List[PostResponse], tags=["board"])
+def my_posts(credentials: HTTPAuthorizationCredentials = Security(security),db: Session = Depends(get_communitydb), user_db: Session = Depends(get_userdb)):
+    token = credentials.credentials
+    payload = decode_jwt(token)
+    user_id = payload.get("sub")
+    user_info = user_db.query(User).filter(User.user_id == user_id).one_or_none()
+    return db.query(Post).filter(Post.user_name == user_info.nickname).all()
 
 @router.post("/comments/", response_model=CommentResponse, tags=["board"])
 def create_comment(comment: CommentCreate, credentials: HTTPAuthorizationCredentials = Security(security),  db: Session = Depends(get_communitydb), user_db: Session = Depends(get_userdb)):
