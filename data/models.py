@@ -30,7 +30,7 @@ class User(user_Base):
 class Contact(user_Base):
     __tablename__ = "contact"
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(String(255), unique=True, index=True)
+    user_id = Column(String(255),index=True)
     device_token = Column(String(500))
     content = Column(String(300))
     answer = Column(String(300))

@@ -7,6 +7,8 @@ from data.database import get_userdb
 from typing import List
 from data.schema import UserCreate,UserInfo,UserLogin,UserName,UserPwd,UserResponse, ContactInfo, SendContact, UpdateAnswer
 from .crud import get_current_user,get_password_hash,get_user,get_user_nickname,get_userdb,verify_password,create_access_token,create_refresh_token,decode_jwt,ACCESS_TOKEN_EXPIRE_MINUTES,REFRESH_TOKEN_EXPIRE_MINUTES
+from firebase_admin import messaging
+
 router = APIRouter()
 security = HTTPBearer()
 
@@ -131,14 +133,35 @@ def read_contact(credentials: HTTPAuthorizationCredentials = Security(security),
         raise HTTPException(status_code=401, detail="Invalid refresh token") 
 
 @router.patch("/update_answer/{contact_id}", tags=["user"])
-def update_answer(contact_id: int, update_data: UpdateAnswer, db : Session = Depends(get_userdb)):
+def update_answer(contact_id: int, update_data: UpdateAnswer, db: Session = Depends(get_userdb)):
     contact_entry = db.query(Contact).filter(Contact.id == contact_id).first()
     if not contact_entry:
-            raise HTTPException(status_code=404, detail="문의사항을 찾을 수 없습니다.")
+        raise HTTPException(status_code=404, detail="문의사항을 찾을 수 없습니다.")
 
     contact_entry.answer = update_data.answer
     db.commit()
     db.refresh(contact_entry)
+
+    message = messaging.Message(
+    notification=messaging.Notification(
+        title='[문의하기] 답변이 등록되었습니다',
+        body='문의하신 내용에 대한 답변이 등록되었습니다. 확인부탁드립니다.'
+    ),
+    token=contact_entry.device_token,  # 개별 사용자 디바이스 토큰
+    android=messaging.AndroidConfig(
+        notification=messaging.AndroidNotification(
+            channel_id='high_importance_channel'
+        )
+    )
+)
+
+    # 메시지 전송 시도 및 로깅
+    try:
+        response = messaging.send(message)
+        print("Successfully sent message:", response)
+    except Exception as e:
+        print("Failed to send message:", e)
+
     return HTTPException(status_code=200, detail="답변이 정상적으로 변경되었습니다.")
 
    

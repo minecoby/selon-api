@@ -5,11 +5,7 @@ from data.database import get_noticedb, get_alarmdb
 from data.models import Notice, Alarm
 from data.schema import NoticeUpdate, NoticeCreate, NoticeInfo, NoticeResponse
 from .crud import get_title
-import firebase_admin
-from firebase_admin import credentials, messaging
-
-cred = credentials.Certificate('data/selon-2ac18-8f9bf90cb657.json')
-firebase_admin.initialize_app(cred)
+from firebase_admin import messaging
 router = APIRouter()
 
 @router.post("/notice/", response_model=NoticeResponse, tags=["notice"])
