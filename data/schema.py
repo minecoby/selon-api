@@ -63,10 +63,19 @@ class UserInfo(BaseModel):
     realname: str
     nickname: str
 
+class SendContact(BaseModel):
+    device_token: str
+    content: str
+    answer: str = "not yet"
+class ContactInfo(BaseModel):
+    content: str
+    answer: str = "not yet"
+class UpdateAnswer(BaseModel):
+    answer: str
 #커뮤니티
 class PostCreate(BaseModel):
     title: str
-    content: str
+    content: str 
 
 class PostUpdate(BaseModel):
     title: Optional[str] = None

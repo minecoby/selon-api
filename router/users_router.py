@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, Security
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from data.models import User
+from data.models import User, Contact
 from data.database import get_userdb
-from data.schema import UserCreate,UserInfo,UserLogin,UserName,UserPwd,UserResponse
+from typing import List
+from data.schema import UserCreate,UserInfo,UserLogin,UserName,UserPwd,UserResponse, ContactInfo, SendContact, UpdateAnswer
 from .crud import get_current_user,get_password_hash,get_user,get_user_nickname,get_userdb,verify_password,create_access_token,create_refresh_token,decode_jwt,ACCESS_TOKEN_EXPIRE_MINUTES,REFRESH_TOKEN_EXPIRE_MINUTES
 router = APIRouter()
 security = HTTPBearer()
@@ -101,3 +102,43 @@ def refresh_token(credentials: HTTPAuthorizationCredentials = Security(security)
         return {"access_token": access_token, "token_type": "bearer"}
     except HTTPException as e:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
+    
+@router.post("/send_contact", tags=["user"])
+def send_contact(contact: SendContact, credentials: HTTPAuthorizationCredentials = Security(security), db : Session = Depends(get_userdb)):
+    token = credentials.credentials
+    try:
+        payload = decode_jwt(token)
+        user_id: str = payload.get("sub")
+        db_info = Contact(user_id=user_id, content = contact.content, answer = contact.answer, device_token = contact.device_token)
+        db.add(db_info)
+        db.commit()
+        db.refresh(db_info)
+        return HTTPException(status_code=200, detail="정상적으로 문의사항이 전송되었습니다.")
+
+    except HTTPException as e:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+
+@router.get("/mycontact", response_model=List[ContactInfo], tags=["user"])
+def read_contact(credentials: HTTPAuthorizationCredentials = Security(security), db : Session = Depends(get_userdb)):
+    token = credentials.credentials
+    try:
+        payload = decode_jwt(token)
+        user_id: str = payload.get("sub")
+        db_info = db.query(Contact).filter(Contact.user_id == user_id).all()
+        return db_info
+    except HTTPException as e:
+        raise HTTPException(status_code=401, detail="Invalid refresh token") 
+
+@router.patch("/update_answer/{contact_id}", tags=["user"])
+def update_answer(contact_id: int, update_data: UpdateAnswer, db : Session = Depends(get_userdb)):
+    contact_entry = db.query(Contact).filter(Contact.id == contact_id).first()
+    if not contact_entry:
+            raise HTTPException(status_code=404, detail="문의사항을 찾을 수 없습니다.")
+
+    contact_entry.answer = update_data.answer
+    db.commit()
+    db.refresh(contact_entry)
+    return HTTPException(status_code=200, detail="답변이 정상적으로 변경되었습니다.")
+
+   
