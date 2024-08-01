@@ -7,11 +7,8 @@ from data.schema import NoticeUpdate, NoticeCreate, NoticeInfo, NoticeResponse
 from .crud import get_title
 import firebase_admin
 from firebase_admin import credentials, messaging
-from dotenv import load_dotenv
-import os
 
-file = os.environ.get("FILE_JSON")
-cred = credentials.Certificate(file)
+cred = credentials.Certificate('data/selon-2ac18-8f9bf90cb657.json')
 firebase_admin.initialize_app(cred)
 router = APIRouter()
 

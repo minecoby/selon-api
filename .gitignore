@@ -2,3 +2,5 @@ node_modules/
 ./python-version
 
 /env
+.env
+data/selon-2ac18-8f9bf90cb657.json
